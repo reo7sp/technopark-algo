@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <cassert>
+#include <memory.h>
 
 using namespace std;
 
@@ -53,7 +54,7 @@ IntVector::~IntVector() {
 void IntVector::append(int item) {
     if (_length == _capacity) {
         _capacity += 32;
-        _data = (int*) realloc(_data, _capacity);
+        _data = (int*) realloc(_data, sizeof(int*) * _capacity);
     }
     _data[_length++] = item;
 }
