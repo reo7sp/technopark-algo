@@ -10,7 +10,7 @@ using namespace std;
 
 class IntVector {
 public:
-    IntVector(size_t initialCapacity = 32);
+    explicit IntVector(size_t initialCapacity = 32);
     IntVector(const IntVector& other);
     ~IntVector();
 
@@ -59,6 +59,7 @@ void IntVector::append(int item) {
 }
 
 void IntVector::remove(size_t index) {
+    assert(index < _length);
     for (size_t i = index + 1; i < _length; i++) {
         _data[i - 1] = _data[i];
     }
@@ -66,6 +67,7 @@ void IntVector::remove(size_t index) {
 }
 
 void IntVector::pop() {
+    assert(_length > 0);
     _length--;
 }
 
@@ -85,6 +87,7 @@ size_t IntVector::getLength() const {
 
 
 IntVector findSquares(int count) {
+    assert(count >= 0);
     IntVector result;
     int accumulator = 0;
     for (int i = 0; i < count; i++) {
