@@ -92,7 +92,7 @@ void Queue::_grow() {
     _capacity += kGrowStep;
     _data = (int*) realloc(_data, sizeof(int) * _capacity);
     if (_tailIndex < _headIndex) {
-        memcpy(_data + _headIndex + kGrowStep, _data + _headIndex, sizeof(int) * kGrowStep);
+        memmove(_data + _headIndex + kGrowStep, _data + _headIndex, sizeof(int) * (_capacity - _headIndex));
         _headIndex += kGrowStep;
     }
 }
