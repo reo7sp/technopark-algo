@@ -28,6 +28,8 @@ public:
     size_t getLength() const;
 
 private:
+    void _grow();
+
     size_t _capacity = 0;
     size_t _length = 0;
     T* _data = nullptr;
@@ -60,8 +62,7 @@ MyVector<T>::~MyVector() {
 template<typename T>
 void MyVector<T>::append(T item) {
     if (_length == _capacity) {
-        _capacity += 32;
-        _data = (T*) realloc(_data, sizeof(T) * _capacity);
+        _grow();
     }
     _data[_length++] = item;
 }
@@ -96,6 +97,13 @@ T& MyVector<T>::operator[](size_t index) {
 template<typename T>
 size_t MyVector<T>::getLength() const {
     return _length;
+}
+
+template<typename T>
+void MyVector<T>::_grow() {
+    const size_t kGrowStep = 32;
+    _capacity += kGrowStep;
+    _data = (T*) realloc(_data, sizeof(T) * _capacity);
 }
 
 

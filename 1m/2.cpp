@@ -30,6 +30,8 @@ public:
     size_t getLength() const;
 
 private:
+    void _grow();
+    
     size_t _capacity = 0;
     size_t _length = 0;
     int* _data = nullptr;
@@ -58,8 +60,7 @@ IntVector::~IntVector() {
 
 void IntVector::append(int item) {
     if (_length == _capacity) {
-        _capacity += 32;
-        _data = (int*) realloc(_data, sizeof(int) * _capacity);
+        _grow();
     }
     _data[_length++] = item;
 }
@@ -89,6 +90,12 @@ int& IntVector::operator[](size_t index) {
 
 size_t IntVector::getLength() const {
     return _length;
+}
+
+void IntVector::_grow() {
+    const size_t kGrowStep = 32;
+    _capacity += kGrowStep;
+    _data = (int*) realloc(_data, sizeof(int) * _capacity);
 }
 
 
