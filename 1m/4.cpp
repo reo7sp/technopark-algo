@@ -27,7 +27,7 @@ using namespace std;
 
 class Queue {
 public:
-    Queue(size_t initialCapacity = 32);
+    Queue(size_t initialCapacity = 1);
     Queue(const Queue& other);
     ~Queue();
 
@@ -36,7 +36,7 @@ public:
 
 private:
     void _grow();
-    size_t _getPrevIndex(size_t current);
+
     size_t _getNextIndex(size_t current);
 
     int* _data = nullptr;
@@ -83,7 +83,7 @@ int Queue::popFront() {
         return -1;
     }
     int item = _data[_headIndex];
-    _headIndex = _getPrevIndex(_headIndex);
+    _headIndex = _getNextIndex(_headIndex);
     return item;
 }
 
@@ -94,14 +94,6 @@ void Queue::_grow() {
     if (_tailIndex < _headIndex) {
         memcpy(_data + _headIndex + kGrowStep, _data + _headIndex, sizeof(int) * kGrowStep);
         _headIndex += kGrowStep;
-    }
-}
-
-size_t Queue::_getPrevIndex(size_t current) {
-    if (current != 0) {
-        return current - 1;
-    } else {
-        return _capacity - 1;
     }
 }
 
