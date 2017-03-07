@@ -31,7 +31,7 @@ public:
 
 private:
     void _grow();
-    
+
     size_t _capacity = 0;
     size_t _length = 0;
     int* _data = nullptr;
@@ -40,7 +40,7 @@ private:
 IntVector::IntVector(size_t initialCapacity) :
         _capacity(initialCapacity),
         _length(0),
-        _data(new int[_capacity])
+        _data((int*) malloc(sizeof(int) * _capacity))
 {
 }
 
@@ -48,14 +48,14 @@ IntVector::IntVector(const IntVector &other) {
     _capacity = other._capacity;
     _length = other._length;
     if (_data != nullptr) {
-        delete[] _data;
+        free(_data);
     }
-    _data = new int[_capacity];
+    _data = (int*) malloc(sizeof(int) * _capacity);
     memcpy(_data, other._data, sizeof(int) * _length);
 }
 
 IntVector::~IntVector() {
-    delete[] _data;
+    free(_data);
 }
 
 void IntVector::append(int item) {

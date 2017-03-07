@@ -39,7 +39,7 @@ template<typename T>
 MyVector<T>::MyVector(size_t initialCapacity) :
         _capacity(initialCapacity),
         _length(0),
-        _data(new T[_capacity])
+        _data((T*) malloc(sizeof(T) * _capacity))
 {
 }
 
@@ -48,15 +48,15 @@ MyVector<T>::MyVector(const MyVector &other) {
     _capacity = other._capacity;
     _length = other._length;
     if (_data != nullptr) {
-        delete[] _data;
+        free(_data);
     }
-    _data = new T[_capacity];
+    _data = (T*) malloc(sizeof(T) * _capacity);
     memcpy(_data, other._data, sizeof(T) * _length);
 }
 
 template<typename T>
 MyVector<T>::~MyVector() {
-    delete[] _data;
+    free(_data);
 }
 
 template<typename T>
