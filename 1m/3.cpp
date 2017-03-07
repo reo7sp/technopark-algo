@@ -49,7 +49,7 @@ MyVector<T>::MyVector(const MyVector &other) {
         delete[] _data;
     }
     _data = new T[_capacity];
-    memcpy(_data, other._data, _length);
+    memcpy(_data, other._data, sizeof(T) * _length);
 }
 
 template<typename T>
@@ -61,7 +61,7 @@ template<typename T>
 void MyVector<T>::append(T item) {
     if (_length == _capacity) {
         _capacity += 32;
-        _data = (T*) realloc(_data, sizeof(T*) * _capacity);
+        _data = (T*) realloc(_data, sizeof(T) * _capacity);
     }
     _data[_length++] = item;
 }

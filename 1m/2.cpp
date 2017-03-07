@@ -49,7 +49,7 @@ IntVector::IntVector(const IntVector &other) {
         delete[] _data;
     }
     _data = new int[_capacity];
-    memcpy(_data, other._data, _length);
+    memcpy(_data, other._data, sizeof(int) * _length);
 }
 
 IntVector::~IntVector() {
@@ -59,7 +59,7 @@ IntVector::~IntVector() {
 void IntVector::append(int item) {
     if (_length == _capacity) {
         _capacity += 32;
-        _data = (int*) realloc(_data, sizeof(int*) * _capacity);
+        _data = (int*) realloc(_data, sizeof(int) * _capacity);
     }
     _data[_length++] = item;
 }
