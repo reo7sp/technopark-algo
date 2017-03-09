@@ -18,20 +18,17 @@ using namespace std;
 
 
 bool isStackAnagram(const string& src, const string& dst) {
-    if (src.length() != dst.length()) {
-        return false;
-    }
-    for (size_t srcIndex = 0; srcIndex < src.length(); srcIndex++) {
+    for (size_t dstIndex = 0; dstIndex < dst.length(); dstIndex++) {
         bool doContinueSearch = true;
 
-        size_t dstIndex;
-        for (dstIndex = srcIndex; doContinueSearch && dstIndex < dst.length(); dstIndex++) {
-            if (src[srcIndex] == dst[dstIndex]) {
+        size_t srcIndex;
+        for (srcIndex = dstIndex; doContinueSearch && srcIndex < src.length(); srcIndex++) {
+            if (dst[dstIndex] == src[srcIndex]) {
                 doContinueSearch = false;
 
-                size_t distance = dstIndex - srcIndex + 1;
-                for (size_t k = 1; k < distance; k++) {
-                    if (src[srcIndex + k] != dst[dstIndex - k]) {
+                size_t distance = srcIndex - dstIndex + 1;
+                for (size_t k = 1; k < distance && dstIndex + k < dst.length(); k++) {
+                    if (dst[dstIndex + k] != src[srcIndex - k]) {
                         doContinueSearch = true;
                         break;
                     }
@@ -42,11 +39,12 @@ bool isStackAnagram(const string& src, const string& dst) {
         if (doContinueSearch) {
             return false;
         } else {
-            srcIndex = dstIndex;
+            dstIndex = srcIndex;
         }
     }
     return true;
 }
+
 
 int main() {
     string src, dst;
