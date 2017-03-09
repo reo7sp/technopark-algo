@@ -19,21 +19,21 @@ using namespace std;
 
 class TriangleTableRow {
 public:
-    TriangleTableRow(size_t size, int* data);
+    TriangleTableRow(size_t size, unsigned long* data);
     TriangleTableRow(const TriangleTableRow& other);
     ~TriangleTableRow();
 
-    int operator[](size_t index) const;
-    int& operator[](size_t index);
+    unsigned long operator[](size_t index) const;
+    unsigned long& operator[](size_t index);
 
     size_t getSize() const;
 
 private:
     size_t _size = 0;
-    int* _data = nullptr;
+    unsigned long* _data = nullptr;
 };
 
-TriangleTableRow::TriangleTableRow(size_t size, int* data) :
+TriangleTableRow::TriangleTableRow(size_t size, unsigned long* data) :
     _size(size),
     _data(data)
 {
@@ -46,12 +46,12 @@ TriangleTableRow::TriangleTableRow(const TriangleTableRow& other) {
 TriangleTableRow::~TriangleTableRow() {
 }
 
-int TriangleTableRow::operator[](size_t index) const {
+unsigned long TriangleTableRow::operator[](size_t index) const {
     assert(index != 0 && index <= _size);
     return _data[index - 1];
 }
 
-int& TriangleTableRow::operator[](size_t index) {
+unsigned long& TriangleTableRow::operator[](size_t index) {
     assert(index != 0 && index <= _size);
     return _data[index - 1];
 }
@@ -76,12 +76,12 @@ private:
     size_t _getDataLocation(size_t n) const;
 
     size_t _size = 0;
-    int* _data = nullptr;
+    unsigned long* _data = nullptr;
 };
 
 TriangleTable::TriangleTable(size_t size) :
     _size(size),
-    _data((int*) calloc(_getDataLocation(_size), sizeof(int)))
+    _data((unsigned long*) calloc(_getDataLocation(_size), sizeof(unsigned long)))
 {
 }
 
@@ -90,7 +90,7 @@ TriangleTable::TriangleTable(const TriangleTable& other) {
     if (_data != nullptr) {
         free(_data);
     }
-    _data = (int*) calloc(_getDataLocation(_size), sizeof(int));
+    _data = (unsigned long*) calloc(_getDataLocation(_size), sizeof(unsigned long));
 }
 
 TriangleTable::~TriangleTable() {
@@ -116,7 +116,7 @@ size_t TriangleTable::_getDataLocation(size_t n) const {
 }
 
 
-int countPossiblePyramids(size_t n) {
+unsigned long countPossiblePyramids(size_t n) {
     assert(n >= 1);
     TriangleTable table(n);
     table[1][1] = 1;
@@ -131,7 +131,7 @@ int countPossiblePyramids(size_t n) {
             }
         }
     }
-    int result = 0;
+    unsigned long result = 0;
     for (size_t i = 1; i <= n; i++) {
         result += table[n][i];
     }
