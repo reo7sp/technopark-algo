@@ -12,24 +12,109 @@
 
 #include <iostream>
 #include <cassert>
+#include <memory.h>
 
 using namespace std;
 
 
-int countPossiblePiramyds(int n, int minCubesOnLevel = 0) {
+class TriangleTableRow {
+public:
+    TriangleTableRow(size_t size, int* data);
+    TriangleTableRow(const TriangleTableRow& other);
+    ~TriangleTableRow();
+
+    int operator[](size_t index) const;
+    int& operator[](size_t index);
+
+    size_t getSize() const;
+
+private:
+    size_t _size = 0;
+    int* _data = nullptr;
+};
+
+TriangleTableRow::TriangleTableRow(size_t size, int* data) :
+    _size(size),
+    _data(data)
+{
+}
+
+TriangleTableRow::TriangleTableRow(const TriangleTableRow& other) {
+    _data = other._data;
+}
+
+TriangleTableRow::~TriangleTableRow() {
+}
+
+int TriangleTableRow::operator[](size_t index) const {
+    return _data[index];
+}
+
+int& TriangleTableRow::operator[](size_t index) {
+    return _data[index];
+}
+
+size_t TriangleTableRow::getSize() const {
+    return _size;
+}
+
+
+class TriangleTable {
+public:
+    TriangleTable(size_t size);
+    TriangleTable(const TriangleTable& other);
+    ~TriangleTable();
+
+    const TriangleTableRow operator[](size_t index) const;
+    TriangleTableRow operator[](size_t index);
+
+    size_t getSize() const;
+
+private:
+    size_t _getDataLocation(size_t n) const;
+
+    size_t _size = 0;
+    int* _data = nullptr;
+};
+
+TriangleTable::TriangleTable(size_t size) :
+    _size(size),
+    _data((int*) malloc(sizeof(int) * _getDataLocation(_size)))
+{
+}
+
+TriangleTable::TriangleTable(const TriangleTable& other) {
+    _size = other._size;
+    if (_data != nullptr) {
+        free(_data);
+    }
+    _data = (int*) malloc(sizeof(int) * _getDataLocation(_size));
+}
+
+TriangleTable::~TriangleTable() {
+    free(_data);
+}
+
+const TriangleTableRow TriangleTable::operator[](size_t index) const {
+    return TriangleTableRow(index + 1, _data + _getDataLocation(index));
+}
+
+TriangleTableRow TriangleTable::operator[](size_t index) {
+    return TriangleTableRow(index + 1, _data + _getDataLocation(index));
+}
+
+size_t TriangleTable::getSize() const {
+    return _size;
+}
+
+size_t TriangleTable::_getDataLocation(size_t n) const {
+    return (1 + n) * n / 2;
+}
+
+
+int countPossiblePyramids(int n) {
     assert(n >= 1);
-    assert(minCubesOnLevel >= 0);
-    if (n < minCubesOnLevel) {
-        return 0;
-    }
-    if (n == minCubesOnLevel) {
-        return 1;
-    }
-    int result = 0;
-    for (int i = minCubesOnLevel + 1; i <= n; i++) {
-        result += countPossiblePiramyds(n - minCubesOnLevel, i);
-    }
-    return result;
+    return 0;
 }
 
 
@@ -37,7 +122,7 @@ int main() {
     int n;
     cin >> n;
 
-    cout << countPossiblePiramyds(n);
+    cout << countPossiblePyramids(n);
 
     return 0;
 }

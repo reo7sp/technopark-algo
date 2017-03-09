@@ -37,7 +37,7 @@ public:
 private:
     void _grow();
 
-    size_t _getNextIndex(size_t current);
+    size_t _getNextIndex(size_t current) const;
 
     int* _data = nullptr;
     size_t _capacity = 0;
@@ -97,7 +97,7 @@ void Queue::_grow() {
     }
 }
 
-size_t Queue::_getNextIndex(size_t current) {
+size_t Queue::_getNextIndex(size_t current) const {
     if (current + 1 != _capacity) {
         return current + 1;
     } else {
