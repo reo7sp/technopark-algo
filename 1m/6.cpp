@@ -120,7 +120,9 @@ int countPossiblePyramids(size_t n) {
     assert(n >= 1);
     TriangleTable table(n);
     table[1][1] = 1;
-    table[2][2] = 1;
+    if (n >= 2) {
+        table[2][2] = 1;
+    }
     for (size_t i = 3; i <= n; i++) {
         table[i][i] = 1;
         for (size_t j = i - 1; j != 0; j--) {
