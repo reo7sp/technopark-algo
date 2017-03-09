@@ -47,11 +47,13 @@ TriangleTableRow::~TriangleTableRow() {
 }
 
 int TriangleTableRow::operator[](size_t index) const {
-    return _data[index];
+    assert(index != 0 && index <= _size);
+    return _data[index - 1];
 }
 
 int& TriangleTableRow::operator[](size_t index) {
-    return _data[index];
+    assert(index != 0 && index <= _size);
+    return _data[index - 1];
 }
 
 size_t TriangleTableRow::getSize() const {
@@ -79,7 +81,7 @@ private:
 
 TriangleTable::TriangleTable(size_t size) :
     _size(size),
-    _data((int*) malloc(sizeof(int) * _getDataLocation(_size)))
+    _data((int*) calloc(_getDataLocation(_size), sizeof(int)))
 {
 }
 
@@ -88,7 +90,7 @@ TriangleTable::TriangleTable(const TriangleTable& other) {
     if (_data != nullptr) {
         free(_data);
     }
-    _data = (int*) malloc(sizeof(int) * _getDataLocation(_size));
+    _data = (int*) calloc(_getDataLocation(_size), sizeof(int));
 }
 
 TriangleTable::~TriangleTable() {
@@ -96,11 +98,13 @@ TriangleTable::~TriangleTable() {
 }
 
 const TriangleTableRow TriangleTable::operator[](size_t index) const {
-    return TriangleTableRow(index + 1, _data + _getDataLocation(index));
+    assert(index != 0 && index <= _size);
+    return TriangleTableRow(index, _data + _getDataLocation(index - 1));
 }
 
 TriangleTableRow TriangleTable::operator[](size_t index) {
-    return TriangleTableRow(index + 1, _data + _getDataLocation(index));
+    assert(index != 0 && index <= _size);
+    return TriangleTableRow(index, _data + _getDataLocation(index - 1));
 }
 
 size_t TriangleTable::getSize() const {
@@ -112,14 +116,29 @@ size_t TriangleTable::_getDataLocation(size_t n) const {
 }
 
 
-int countPossiblePyramids(int n) {
+int countPossiblePyramids(size_t n) {
     assert(n >= 1);
-    return 0;
+    TriangleTable table(n);
+    table[1][1] = 1;
+    table[2][2] = 1;
+    for (size_t i = 3; i <= n; i++) {
+        table[i][i] = 1;
+        for (size_t j = i - 1; j != 0; j--) {
+            for (size_t k = min(j - 1, i - j); k != 0; k--) {
+                table[i][j] += table[i - j][k];
+            }
+        }
+    }
+    int result = 0;
+    for (size_t i = 1; i <= n; i++) {
+        result += table[n][i];
+    }
+    return result;
 }
 
 
 int main() {
-    int n;
+    size_t n;
     cin >> n;
 
     cout << countPossiblePyramids(n);
