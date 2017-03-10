@@ -15,7 +15,7 @@ a = 4 - pop back
  */
 
 /*
- * 4_1.  Реализовать очередь с динамическим зацикленным буфером.
+ * 4_2.  Реализовать дек с динамическим зацикленным буфером.
  */
 
 #include <iostream>
@@ -25,18 +25,21 @@ a = 4 - pop back
 using namespace std;
 
 
-class Queue {
+class Deque {
 public:
-    Queue(size_t initialCapacity = 1);
-    Queue(const Queue& other);
-    ~Queue();
+    Deque(size_t initialCapacity = 32);
+    Deque(const Deque& other);
+    ~Deque();
 
+    void pushFront(int item);
     void pushBack(int item);
     int popFront();
+    int popBack();
 
 private:
     void _grow();
 
+    size_t _getPreviousIndex(size_t current) const;
     size_t _getNextIndex(size_t current) const;
 
     int* _data = nullptr;
@@ -45,7 +48,7 @@ private:
     size_t _tailIndex = 0;
 };
 
-Queue::Queue(size_t initialCapacity) :
+Deque::Deque(size_t initialCapacity) :
     _capacity(initialCapacity),
     _data((int*) malloc(sizeof(int) * initialCapacity)),
     _headIndex(0),
@@ -53,7 +56,7 @@ Queue::Queue(size_t initialCapacity) :
 {
 }
 
-Queue::Queue(const Queue& other) {
+Deque::Deque(const Deque& other) {
     _capacity = other._capacity;
     _headIndex = other._headIndex;
     _tailIndex = other._tailIndex;
@@ -64,21 +67,31 @@ Queue::Queue(const Queue& other) {
     memcpy(_data, other._data, sizeof(int) * _capacity);
 }
 
-Queue::~Queue() {
+Deque::~Deque() {
     free(_data);
 }
 
-void Queue::pushBack(int item) {
-    size_t nextTailIndex = _getNextIndex(_tailIndex);
-    if (nextTailIndex == _headIndex) {
+void Deque::pushFront(int item) {
+    size_t newIndex = _getPreviousIndex(_headIndex);
+    if (newIndex == _tailIndex) {
         _grow();
-        nextTailIndex = _getNextIndex(_tailIndex);
+        newIndex = _getPreviousIndex(_headIndex);
     }
-    _data[_tailIndex] = item;
-    _tailIndex = nextTailIndex;
+    _headIndex = newIndex;
+    _data[_headIndex] = item;
 }
 
-int Queue::popFront() {
+void Deque::pushBack(int item) {
+    size_t newIndex = _getNextIndex(_tailIndex);
+    if (newIndex == _headIndex) {
+        _grow();
+        newIndex = _getNextIndex(_tailIndex);
+    }
+    _data[_tailIndex] = item;
+    _tailIndex = newIndex;
+}
+
+int Deque::popFront() {
     if (_headIndex == _tailIndex) {
         return -1;
     }
@@ -87,7 +100,16 @@ int Queue::popFront() {
     return item;
 }
 
-void Queue::_grow() {
+int Deque::popBack() {
+    if (_headIndex == _tailIndex) {
+        return -1;
+    }
+    _tailIndex = _getPreviousIndex(_tailIndex);
+    int item = _data[_tailIndex];
+    return item;
+}
+
+void Deque::_grow() {
     const size_t kGrowStep = 32;
     _capacity += kGrowStep;
     _data = (int*) realloc(_data, sizeof(int) * _capacity);
@@ -97,7 +119,15 @@ void Queue::_grow() {
     }
 }
 
-size_t Queue::_getNextIndex(size_t current) const {
+size_t Deque::_getPreviousIndex(size_t current) const {
+    if (current != 0) {
+        return current - 1;
+    } else {
+        return _capacity - 1;
+    }
+}
+
+size_t Deque::_getNextIndex(size_t current) const {
     if (current + 1 != _capacity) {
         return current + 1;
     } else {
@@ -106,14 +136,21 @@ size_t Queue::_getNextIndex(size_t current) const {
 }
 
 
-bool processCommand(Queue& queue, int mode, int value) {
+bool processCommand(Deque& queue, int mode, int value) {
     switch (mode) {
+        case 1:
+            queue.pushFront(value);
+            return true;
+
         case 2:
             return queue.popFront() == value;
 
         case 3:
             queue.pushBack(value);
             return true;
+
+        case 4:
+            return queue.popBack() == value;
 
         default:
             return false;
@@ -122,7 +159,7 @@ bool processCommand(Queue& queue, int mode, int value) {
 
 
 int main() {
-    Queue queue;
+    Deque queue;
 
     size_t n;
     cin >> n;
