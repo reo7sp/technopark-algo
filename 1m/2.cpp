@@ -100,7 +100,7 @@ void IntVector::_grow() {
 
 
 size_t countPairsThatSumsToK(const IntVector& a, const IntVector& b, int k) {
-    size_t answer = 0;
+    size_t result = 0;
 
     size_t indexA = 0;
     size_t indexB = b.getLength() - 1;
@@ -117,7 +117,8 @@ size_t countPairsThatSumsToK(const IntVector& a, const IntVector& b, int k) {
             }
             indexA++;
         } else {
-            answer++;
+            result++;
+
             if (indexB == 0) {
                 break;
             }
@@ -125,27 +126,32 @@ size_t countPairsThatSumsToK(const IntVector& a, const IntVector& b, int k) {
         }
     }
 
-    return answer;
+    return result;
 }
 
 
 int main() {
-    size_t n, m;
-    IntVector a, b;
-    int k;
-
+    size_t n;
     cin >> n;
+
+    IntVector a(n);
     for (size_t i = 0; i < n; i++) {
         int item;
         cin >> item;
         a.append(item);
     }
+
+    size_t m;
     cin >> m;
+
+    IntVector b(n);
     for (size_t i = 0; i < m; i++) {
         int item;
         cin >> item;
         b.append(item);
     }
+
+    int k;
     cin >> k;
 
     cout << countPairsThatSumsToK(a, b, k);

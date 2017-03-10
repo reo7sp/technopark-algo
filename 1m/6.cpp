@@ -119,15 +119,27 @@ size_t TriangleTable::_getDataLocation(size_t n) const {
 unsigned long countPossiblePyramids(size_t n) {
     assert(n >= 1);
     TriangleTable table(n);
+    /*
+     *   | max sum component →      |
+     * __|__________________________|
+     *   |                          |
+     * n | 1                        | 1 = (1)
+     * ↓ |  1                       | 2 = (2)
+     *   |  11                      | 3 = (3), (2, 1)
+     *   |   11                     | 4 = (4), (3, 1)
+     *   |   111                    | 5 = (5), (4, 1), (3, 2)
+     *   |   1111                   | 6 = (6), (5, 1), (4, 2), (3, 2, 1)
+     *   |    2111                  | 7 = (7), (6, 1), (5, 2), (4, 3), (4, 2, 1)
+     */
     table[1][1] = 1;
     if (n >= 2) {
         table[2][2] = 1;
     }
-    for (size_t i = 3; i <= n; i++) {
-        table[i][i] = 1;
-        for (size_t j = i - 1; j != 0; j--) {
-            for (size_t k = min(j - 1, i - j); k != 0; k--) {
-                table[i][j] += table[i - j][k];
+    for (size_t currentNumber = 3; currentNumber <= n; currentNumber++) {
+        table[currentNumber][currentNumber] = 1;
+        for (size_t maxSumComponent = currentNumber - 1; maxSumComponent != 0; maxSumComponent--) {
+            for (size_t i = min(maxSumComponent - 1, currentNumber - maxSumComponent); i != 0; i--) {
+                table[currentNumber][maxSumComponent] += table[currentNumber - maxSumComponent][i];
             }
         }
     }
