@@ -13,36 +13,92 @@
 
 #include <iostream>
 #include <string>
+#include <cassert>
+#include <memory.h>
 
 using namespace std;
 
 
+class CharStack {
+public:
+    explicit CharStack(size_t initialCapacity = 32);
+    CharStack(const CharStack& other);
+    ~CharStack();
+
+    void push(char item);
+    char pop();
+    char seek() const;
+
+    bool isEmpty();
+
+private:
+    void _grow();
+
+    size_t _capacity = 0;
+    size_t _length = 0;
+    char* _data = nullptr;
+};
+
+CharStack::CharStack(size_t initialCapacity) :
+        _capacity(initialCapacity),
+        _length(0),
+        _data((char*) malloc(sizeof(char) * _capacity))
+{
+}
+
+CharStack::CharStack(const CharStack& other) {
+    _capacity = other._capacity;
+    _length = other._length;
+    if (_data != nullptr) {
+        free(_data);
+    }
+    _data = (char*) malloc(sizeof(char) * _capacity);
+    memcpy(_data, other._data, sizeof(char) * _length);
+}
+
+CharStack::~CharStack() {
+    free(_data);
+}
+
+void CharStack::push(char item) {
+    if (_length == _capacity) {
+        _grow();
+    }
+    _data[_length++] = item;
+}
+
+char CharStack::pop() {
+    assert(_length != 0);
+    return _data[--_length];
+}
+
+char CharStack::seek() const {
+    assert(_length != 0);
+    return _data[_length - 1];
+}
+
+void CharStack::_grow() {
+    const size_t kGrowStep = 32;
+    _capacity += kGrowStep;
+    _data = (char*) realloc(_data, sizeof(char) * _capacity);
+}
+
+bool CharStack::isEmpty() {
+    return _length == 0;
+}
+
+
 bool isStackAnagram(const string& src, const string& dst) {
-    for (size_t dstIndex = 0; dstIndex < dst.length(); dstIndex++) {
-        bool doContinueSearch = true;
-
-        size_t srcIndex;
-        for (srcIndex = dstIndex; doContinueSearch && srcIndex < src.length(); srcIndex++) {
-            if (dst[dstIndex] == src[srcIndex]) {
-                doContinueSearch = false;
-
-                size_t distance = srcIndex - dstIndex + 1;
-                for (size_t k = 1; k < distance && dstIndex + k < dst.length(); k++) {
-                    if (dst[dstIndex + k] != src[srcIndex - k]) {
-                        doContinueSearch = true;
-                        break;
-                    }
-                }
-            }
-        }
-
-        if (doContinueSearch) {
-            return false;
-        } else {
-            dstIndex = srcIndex;
+    CharStack stack;
+    size_t dstIndex = 0;
+    for (size_t srcIndex = 0; srcIndex < src.length(); srcIndex++) {
+        stack.push(src[srcIndex]);
+        while (!stack.isEmpty() && dst[dstIndex] == stack.seek()) {
+            stack.pop();
+            dstIndex++;
         }
     }
-    return true;
+    return stack.isEmpty();
 }
 
 
