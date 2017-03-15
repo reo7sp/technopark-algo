@@ -15,162 +15,151 @@
 using namespace std;
 
 
-class TimeDuration {
-public:
-    TimeDuration(int start, int end);
-    TimeDuration(const TimeDuration& other);
-    ~TimeDuration();
+typedef unsigned int Time;
 
-    int getStart() const;
-    int getEnd() const;
-    int getDuration() const;
+
+class TimePiece {
+public:
+    TimePiece(Time start, Time end);
+    TimePiece(const TimePiece& other);
+    ~TimePiece();
+
+    Time getStart() const;
+    Time getEnd() const;
+    Time getDuration() const;
 
 private:
-    int _start = 0;
-    int _end = 0;
+    Time _start = 0;
+    Time _end = 0;
 };
 
-TimeDuration::TimeDuration(int start, int end) :
-        _start(start), _end(end)
-{
+TimePiece::TimePiece(Time start, Time end) : _start(start), _end(end) {
     assert(_start <= _end);
 }
 
-TimeDuration::TimeDuration(const TimeDuration& other) {
+TimePiece::TimePiece(const TimePiece& other) {
     _start = other._start;
     _end = other._end;
 }
 
-TimeDuration::~TimeDuration() {
+TimePiece::~TimePiece() {
 }
 
-int TimeDuration::getStart() const {
+Time TimePiece::getStart() const {
     return _start;
 }
 
-int TimeDuration::getEnd() const {
+Time TimePiece::getEnd() const {
     return _end;
 }
 
-int TimeDuration::getDuration() const {
+Time TimePiece::getDuration() const {
     return _end - _start + 1;
 }
 
 
-class TimeDurationsContainerNode {
+class TimePiecesContainerNode {
 public:
-    TimeDurationsContainerNode(TimeDuration item);
-    TimeDurationsContainerNode(const TimeDurationsContainerNode& other);
-    ~TimeDurationsContainerNode();
+    TimePiecesContainerNode(TimePiece item);
+    TimePiecesContainerNode(const TimePiecesContainerNode& other);
+    ~TimePiecesContainerNode();
 
-    TimeDuration item = TimeDuration(0, 0);
-    TimeDurationsContainerNode* nextNode = nullptr;
+    TimePiece item = TimePiece(0, 0);
+    TimePiecesContainerNode* nextNode = nullptr;
 };
 
-TimeDurationsContainerNode::TimeDurationsContainerNode(TimeDuration item) :
-        item(item)
-{
+TimePiecesContainerNode::TimePiecesContainerNode(TimePiece item) : TimePiece(item) {
 }
 
-TimeDurationsContainerNode::TimeDurationsContainerNode(const TimeDurationsContainerNode& other) {
+TimePiecesContainerNode::TimePiecesContainerNode(const TimePiecesContainerNode& other) {
     item = other.item;
     nextNode = other.nextNode;
 }
 
-TimeDurationsContainerNode::~TimeDurationsContainerNode() {
+TimePiecesContainerNode::~TimePiecesContainerNode() {
 }
 
 
-class TimeDurationsContainerIterator {
+class TimePiecesContainerIterator {
 public:
-    TimeDurationsContainerIterator(TimeDurationsContainerNode* startItem);
-    TimeDurationsContainerIterator(const TimeDurationsContainerIterator& other);
-    ~TimeDurationsContainerIterator();
+    TimePiecesContainerIterator(TimePiecesContainerNode* startItem);
+    TimePiecesContainerIterator(const TimePiecesContainerIterator& other);
+    ~TimePiecesContainerIterator();
 
-    const TimeDuration& current() const;
+    const TimePiece& current() const;
     void next();
     bool isDone();
 
 private:
-    TimeDurationsContainerNode* _currentNode = nullptr;
+    TimePiecesContainerNode* _currentNode = nullptr;
 };
 
-TimeDurationsContainerIterator::TimeDurationsContainerIterator(TimeDurationsContainerNode* startItem) :
-    _currentNode(startItem)
+TimePiecesContainerIterator::TimePiecesContainerIterator(TimePiecesContainerNode* startItem) : _currentNode(startItem)
 {
 }
 
-TimeDurationsContainerIterator::TimeDurationsContainerIterator(const TimeDurationsContainerIterator& other) {
+TimePiecesContainerIterator::TimePiecesContainerIterator(const TimePiecesContainerIterator& other) {
     _currentNode = other._currentNode;
 }
 
-TimeDurationsContainerIterator::~TimeDurationsContainerIterator() {
+TimePiecesContainerIterator::~TimePiecesContainerIterator() {
 }
 
-const TimeDuration& TimeDurationsContainerIterator::current() const {
+const TimePiece& TimePiecesContainerIterator::current() const {
     assert(_currentNode != nullptr);
     return _currentNode->item;
 }
 
-void TimeDurationsContainerIterator::next() {
+void TimePiecesContainerIterator::next() {
     assert(_currentNode != nullptr);
     _currentNode = _currentNode->nextNode;
 }
 
-bool TimeDurationsContainerIterator::isDone() {
+bool TimePiecesContainerIterator::isDone() {
     return _currentNode == nullptr;
 }
 
 
-class TimeDurationsContainer {
+class TimePiecesContainer {
 public:
-    TimeDurationsContainer();
-    TimeDurationsContainer(const TimeDurationsContainer& other);
-    ~TimeDurationsContainer();
+    TimePiecesContainer();
+    TimePiecesContainer(const TimePiecesContainer& other);
+    ~TimePiecesContainer();
 
-    void push(TimeDuration item);
-    TimeDurationsContainerIterator iterate() const;
-
+    void push(TimePiece item);
+    TimePiecesContainerIterator iterate() const;
     size_t getLength();
 
-    int getMinTime();
-    int getMaxTime();
-
 private:
-    TimeDurationsContainerNode* _head = nullptr;
-    int _minTime = 0;
-    int _maxTime = 0;
+    TimePiecesContainerNode* _head = nullptr;
 };
 
-TimeDurationsContainer::TimeDurationsContainer() {
+TimePiecesContainer::TimePiecesContainer() {
 }
 
-TimeDurationsContainer::TimeDurationsContainer(const TimeDurationsContainer& other) {
+TimePiecesContainer::TimePiecesContainer(const TimePiecesContainer& other) {
     _head = other._head;
 }
 
-TimeDurationsContainer::~TimeDurationsContainer() {
-    size_t length = getLength();
-    TimeDurationsContainerNode** nodes = new TimeDurationsContainerNode*[length];
-    TimeDurationsContainerNode* node = _head;
-    for (size_t i = 0; i < length; i++) {
-        nodes[i] = node;
+TimePiecesContainer::~TimePiecesContainer() {
+    TimePiecesContainerNode** nodes = new TimePiecesContainerNode*[getLength()];
+    TimePiecesContainerNode* node = _head;
+    size_t i = 0;
+    while (node != nullptr) {
+        nodes[i++] = node;
         node = node->nextNode;
     }
     delete[] nodes;
 }
 
-void TimeDurationsContainer::push(TimeDuration item) {
-    TimeDurationsContainerNode* newNode = new TimeDurationsContainerNode(item);
-
+void TimePiecesContainer::push(TimePiece item) {
+    TimePiecesContainerNode* newNode = new TimePiecesContainerNode(item);
     if (_head == nullptr) {
         _head = newNode;
     } else {
-        TimeDurationsContainerNode* node = _head;
+        TimePiecesContainerNode* node = _head;
         while (node->nextNode != nullptr) {
-            if (node->item.getDuration() == newNode->item.getDuration() &&
-                    node->nextNode->item.getDuration() != newNode->item.getDuration())
-            {
+            if (node->nextNode->item.getEnd()) { // TODO
                 break;
             }
             node = node->nextNode;
@@ -178,22 +167,15 @@ void TimeDurationsContainer::push(TimeDuration item) {
         newNode->nextNode = node->nextNode;
         node->nextNode = newNode;
     }
-
-    if (item.getStart() < _minTime) {
-        _minTime = item.getStart();
-    }
-    if (item.getEnd() > _maxTime) {
-        _maxTime = item.getEnd();
-    }
 }
 
-TimeDurationsContainerIterator TimeDurationsContainer::iterate() const {
-    return TimeDurationsContainerIterator(_head);
+TimePiecesContainerIterator TimePiecesContainer::iterate() const {
+    return TimePiecesContainerIterator(_head);
 }
 
-size_t TimeDurationsContainer::getLength() {
+size_t TimePiecesContainer::getLength() {
     size_t length = 0;
-    TimeDurationsContainerNode* node = _head;
+    TimePiecesContainerNode* node = _head;
     while (node != nullptr) {
         length++;
         node = node->nextNode;
@@ -201,20 +183,12 @@ size_t TimeDurationsContainer::getLength() {
     return length;
 }
 
-int TimeDurationsContainer::getMinTime() {
-    return _minTime;
-}
 
-int TimeDurationsContainer::getMaxTime() {
-    return _maxTime;
-}
-
-
-size_t countMaxDurations(TimeDurationsContainer container) {
+size_t countMaxDurations(TimePiecesContainer container) {
     size_t result = 0;
     bool* schedule = (bool*) calloc((size_t) (container.getMaxTime() + 1), sizeof(bool));
-    for (TimeDurationsContainerIterator iter = container.iterate(); !iter.isDone(); iter.next()) {
-        const TimeDuration& item = iter.current();
+    for (TimePiecesContainerIterator iter = container.iterate(); !iter.isDone(); iter.next()) {
+        const TimePiece& item = iter.current();
         bool canSchedule = true;
         for (int i = item.getStart(); i <= item.getEnd(); i++) {
             if (schedule[i]) {
@@ -235,11 +209,11 @@ size_t countMaxDurations(TimeDurationsContainer container) {
 
 
 int main() {
-    TimeDurationsContainer container;
+    TimePiecesContainer container;
 
-    int startTime, endTime;
+    Time startTime, endTime;
     while (cin >> startTime && cin >> endTime) {
-        container.push(TimeDuration(startTime, endTime - 1));
+        container.push(TimePiece(startTime, endTime - 1));
     }
 
     cout << countMaxDurations(container);
