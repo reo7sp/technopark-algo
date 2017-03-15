@@ -164,60 +164,45 @@ void TimePiecesVector::_grow() {
 size_t countMaxMeetings(TimePiecesVector timePiecesVector) {
     size_t result = 0;
 
-    size_t scheduleTableWidth = timePiecesVector.getMaxTime();
-    int* schedule = new int[scheduleTableWidth];
-    memset(schedule, -1, scheduleTableWidth);
+    size_t scheduleLength = timePiecesVector.getMaxTime();
+    int* schedule = new int[scheduleLength];
+    memset(schedule, -1, scheduleLength);
 
     for (size_t i = 0; i < timePiecesVector.getLength(); i++) {
-        assert(i != 0);
         const TimePiece& timePiece = timePiecesVector[i];
 
         int* intersectedTimePieces = new int[timePiece.getDuration()];
         size_t intersectedCount = 0;
-
         for (int time = timePiece.getStart(); time <= timePiece.getEnd(); time++) {
             if (schedule[time] != -1) {
                 intersectedTimePieces[intersectedCount++] = schedule[time];
             }
         }
+        if (intersectedCount >= 2) {
+            continue;
+        }
 
-        if (intersectedCount == 0) {
-            for (int time = timePiece.getStart(); time <= timePiece.getEnd(); time++) {
-                schedule[time] = i;
-            }
-            result++;
-        } else {
-            size_t alternateResult = 0;
+        if (intersectedCount == 1) {
+            size_t alternateResult = result;
+            int* alternateSchedule = new int[scheduleLength];
+            memcpy(alternateSchedule, schedule, scheduleLength);
 
-            int* alternateSchedule = new int[scheduleTableWidth];
-            memcpy(alternateSchedule, );
-
-            for (size_t j = 0; j <= i; j++) {
-                assert(j != 0);
-                bool doSkip = false;
-                for (size_t k = 0; k < intersectedCount; k++) {
-                    if (intersectedTimePieces[k] == j) {
-                        doSkip = true;
-                        break;
-                    }
-                }
-                if (doSkip) {
-                    continue;
-                }
+            for (size_t j = i; j > intersectedTimePieces[0]; j--) {
                 const TimePiece& timePiece1 = timePiecesVector[j];
-                bool canSchedule = true;
+                if (alternateSchedule[timePiece1.getStart()] == j) {
+                    for (int time = timePiece1.getStart() + 1; time <= timePiece1.getEnd(); time++) {
+                        alternateSchedule[time] = -1;
+                    }
+                    alternateResult--;
+                }
+            }
+
+            for (size_t j = (size_t) (intersectedTimePieces[0] + 1); j <= i; j--) {
+                const TimePiece& timePiece1 = timePiecesVector[j];
                 for (int time = timePiece1.getStart(); time <= timePiece1.getEnd(); time++) {
-                    if (alternateSchedule[time] != -1) {
-                        canSchedule = false;
-                        break;
-                    }
+                    alternateSchedule[time] = j;
                 }
-                if (canSchedule) {
-                    for (int time = timePiece1.getStart(); time <= timePiece1.getEnd(); time++) {
-                        alternateSchedule[time] = j;
-                    }
-                    alternateResult++;
-                }
+                alternateResult++;
             }
 
             if (alternateResult > result) {
@@ -228,6 +213,11 @@ size_t countMaxMeetings(TimePiecesVector timePiecesVector) {
                 delete[] alternateSchedule;
             }
         }
+
+        for (int time = timePiece.getStart(); time <= timePiece.getEnd(); time++) {
+            schedule[time] = i;
+        }
+        result++;
     }
 
     delete[] schedule;
