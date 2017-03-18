@@ -108,21 +108,34 @@ void MyVector<T>::_grow() {
 
 
 size_t findIndex(const MyVector<int>& src, int item) {
-    size_t left = 0;
-    size_t right = src.getLength() - 1;
-    while (left < right) {
-        size_t i = (left + right) / 2;
-        if (src[i] < item) {
-            left = i + 1;
-        } else if (src[i] >= item){
-            right = i;
-        }
-    }
-    if (src[left] >= item) {
-        return left;
-    } else {
+    if (src[src.getLength() - 1] < item) {
         return src.getLength();
     }
+    if (src[0] >= item) {
+        return 0;
+    }
+
+    size_t left = 0;
+    size_t right = src.getLength() - 1;
+
+    for (size_t i = 1; i < src.getLength(); i <<= 1) {
+        if (src[i] < item) {
+            left = i;
+        } else {
+            right = i;
+            break;
+        }
+    }
+
+    while (left < right) {
+        size_t mid = (left + right) / 2;
+        if (src[mid] < item) {
+            left = mid + 1;
+        } else {
+            right = mid;
+        }
+    }
+    return left;
 }
 
 MyVector<size_t> findIndex(const MyVector<int>& src, const MyVector<int>& items) {
