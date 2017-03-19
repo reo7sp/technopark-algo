@@ -15,7 +15,7 @@
 using namespace std;
 
 
-typedef unsigned int Time;
+typedef long Time;
 
 
 class TimePiece {
@@ -54,7 +54,7 @@ Time TimePiece::getEnd() const {
 }
 
 Time TimePiece::getDuration() const {
-    return _end - _start + 1;
+    return _end - _start;
 }
 
 
@@ -68,7 +68,7 @@ public:
     TimePiecesContainerNode* nextNode = nullptr;
 };
 
-TimePiecesContainerNode::TimePiecesContainerNode(TimePiece item) : TimePiece(item) {
+TimePiecesContainerNode::TimePiecesContainerNode(TimePiece item) : item(item) {
 }
 
 TimePiecesContainerNode::TimePiecesContainerNode(const TimePiecesContainerNode& other) {
@@ -130,6 +130,9 @@ public:
     TimePiecesContainerIterator iterate() const;
     size_t getLength();
 
+    Time getMinTime() const;
+    Time getMaxTime() const;
+
 private:
     TimePiecesContainerNode* _head = nullptr;
 };
@@ -159,7 +162,11 @@ void TimePiecesContainer::push(TimePiece item) {
     } else {
         TimePiecesContainerNode* node = _head;
         while (node->nextNode != nullptr) {
-            if (node->nextNode->item.getEnd()) { // TODO
+            const TimePiece& nextPiece = node->nextNode->item;
+            if (item.getEnd() < nextPiece.getEnd()) {
+                break;
+            }
+            if (item.getEnd() == nextPiece.getEnd() && item.getDuration() < nextPiece.getDuration()) {
                 break;
             }
             node = node->nextNode;
@@ -183,27 +190,63 @@ size_t TimePiecesContainer::getLength() {
     return length;
 }
 
+Time TimePiecesContainer::getMinTime() const {
+    assert(_head != nullptr);
+    TimePiecesContainerNode* node = _head;
+    Time min = node->item.getStart();
+    node = node->nextNode;
+    while (node != nullptr) {
+        if (node->item.getStart() < min) {
+            min = node->item.getStart();
+        }
+        node = node->nextNode;
+    }
+    return min;
+}
 
-size_t countMaxDurations(TimePiecesContainer container) {
+Time TimePiecesContainer::getMaxTime() const {
+    assert(_head != nullptr);
+    TimePiecesContainerNode* node = _head;
+    Time max = node->item.getEnd();
+    node = node->nextNode;
+    while (node != nullptr) {
+        if (node->item.getEnd() < max) {
+            max = node->item.getEnd();
+        }
+        node = node->nextNode;
+    }
+    return max;
+}
+
+
+size_t countMaxDurations(const TimePiecesContainer& container) {
     size_t result = 0;
-    bool* schedule = (bool*) calloc((size_t) (container.getMaxTime() + 1), sizeof(bool));
+
+    Time minTime = container.getMinTime();
+    Time maxTime = container.getMaxTime();
+    size_t scheduleSize = (size_t) (maxTime - minTime + 1);
+    bool* schedule = (bool*) calloc(scheduleSize, sizeof(bool));
+
     for (TimePiecesContainerIterator iter = container.iterate(); !iter.isDone(); iter.next()) {
         const TimePiece& item = iter.current();
+        
         bool canSchedule = true;
-        for (int i = item.getStart(); i <= item.getEnd(); i++) {
-            if (schedule[i]) {
+        for (Time i = item.getStart(); i < item.getEnd(); i++) {
+            if (schedule[minTime + i]) {
                 canSchedule = false;
                 break;
             }
         }
         if (canSchedule) {
             result++;
-            for (int i = item.getStart(); i <= item.getEnd(); i++) {
-                schedule[i] = true;
+            for (Time i = item.getStart(); i < item.getEnd(); i++) {
+                schedule[minTime + i] = true;
             }
         }
     }
+
     free(schedule);
+
     return result;
 }
 
@@ -213,7 +256,7 @@ int main() {
 
     Time startTime, endTime;
     while (cin >> startTime && cin >> endTime) {
-        container.push(TimePiece(startTime, endTime - 1));
+        container.push(TimePiece(startTime, endTime));
     }
 
     cout << countMaxDurations(container);
