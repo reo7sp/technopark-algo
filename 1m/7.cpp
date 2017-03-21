@@ -82,20 +82,11 @@ public:
 };
 
 bool TimePieceComparableByEnd::operator<(const TimePiece& other) const {
-    if (getEnd() != other.getEnd()) {
-        return getEnd() < other.getEnd();
-    } else {
-        return getDuration() < other.getDuration();
-    }
+    return getEnd() < other.getEnd();
 }
 
 bool TimePieceComparableByEnd::operator>(const TimePiece& other) const {
-//    return !(*this < other) && *this != other;
-    if (getEnd() != other.getEnd()) {
-        return getEnd() > other.getEnd();
-    } else {
-        return getDuration() > other.getDuration();
-    }
+    return getEnd() > other.getEnd();
 }
 
 
@@ -118,6 +109,7 @@ public:
 
 private:
     void _grow();
+
     void _qsort(size_t left, size_t right);
     size_t _qsort_partition(size_t left, size_t right);
 
@@ -208,7 +200,7 @@ template<typename T>
 void MyVector<T>::_qsort(size_t left, size_t right) {
     if (left < right) {
         size_t middle = _qsort_partition(left, right);
-        _qsort(left, middle);
+        _qsort(left, middle - 1);
         _qsort(middle + 1, right);
     }
 }
