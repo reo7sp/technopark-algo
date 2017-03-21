@@ -11,6 +11,7 @@
 #include <iostream>
 #include <cassert>
 #include <memory.h>
+#include <type_traits>
 
 using namespace std;
 
@@ -28,9 +29,14 @@ public:
     Time getEnd() const;
     Time getDuration() const;
 
-private:
-    Time _start = 0;
+    bool operator==(const TimePiece& other) const;
+    bool operator!=(const TimePiece& other) const;
+
+protected:
+    TimePiece() {}
+
     Time _end = 0;
+    Time _start = 0;
 };
 
 TimePiece::TimePiece(Time start, Time end) : _start(start), _end(end) {
@@ -57,206 +63,246 @@ Time TimePiece::getDuration() const {
     return _end - _start;
 }
 
+bool TimePiece::operator==(const TimePiece& other) const {
+    return _start == other._start && _end == other._end;
+}
 
-class TimePiecesContainerNode {
+bool TimePiece::operator!=(const TimePiece& other) const {
+    return !(*this == other);
+}
+
+
+class TimePieceComparableByEnd : public TimePiece {
 public:
-    TimePiecesContainerNode(TimePiece item);
-    TimePiecesContainerNode(const TimePiecesContainerNode& other);
-    ~TimePiecesContainerNode();
+    TimePieceComparableByEnd(Time start, Time end) : TimePiece(start, end) {}
+    TimePieceComparableByEnd(const TimePieceComparableByEnd& other) : TimePiece(other._start, other._end) {}
 
-    TimePiece item = TimePiece(0, 0);
-    TimePiecesContainerNode* nextNode = nullptr;
+    bool operator<(const TimePiece& other) const;
+    bool operator>(const TimePiece& other) const;
 };
 
-TimePiecesContainerNode::TimePiecesContainerNode(TimePiece item) : item(item) {
+bool TimePieceComparableByEnd::operator<(const TimePiece& other) const {
+    if (getEnd() != other.getEnd()) {
+        return getEnd() < other.getEnd();
+    } else {
+        return getDuration() < other.getDuration();
+    }
 }
 
-TimePiecesContainerNode::TimePiecesContainerNode(const TimePiecesContainerNode& other) {
-    item = other.item;
-    nextNode = other.nextNode;
+bool TimePieceComparableByEnd::operator>(const TimePiece& other) const {
+//    return !(*this < other) && *this != other;
+    if (getEnd() != other.getEnd()) {
+        return getEnd() > other.getEnd();
+    } else {
+        return getDuration() > other.getDuration();
+    }
 }
 
-TimePiecesContainerNode::~TimePiecesContainerNode() {
-}
 
-
-class TimePiecesContainerIterator {
+template<typename T>
+class MyVector {
 public:
-    TimePiecesContainerIterator(TimePiecesContainerNode* startItem);
-    TimePiecesContainerIterator(const TimePiecesContainerIterator& other);
-    ~TimePiecesContainerIterator();
+    explicit MyVector(size_t initialCapacity = 32);
+    MyVector(const MyVector& other);
+    ~MyVector();
 
-    const TimePiece& current() const;
-    void next();
-    bool isDone();
+    void append(T item);
+    void remove(size_t index);
+    void pop();
+    void sort();
+
+    T operator[](size_t index) const;
+    T& operator[](size_t index);
+
+    size_t getLength() const;
 
 private:
-    TimePiecesContainerNode* _currentNode = nullptr;
+    void _grow();
+    void _qsort(size_t left, size_t right);
+    size_t _qsort_partition(size_t left, size_t right);
+
+    size_t _capacity = 0;
+    size_t _length = 0;
+    T* _data = nullptr;
 };
 
-TimePiecesContainerIterator::TimePiecesContainerIterator(TimePiecesContainerNode* startItem) : _currentNode(startItem)
+template<typename T>
+MyVector<T>::MyVector(size_t initialCapacity) :
+        _capacity(initialCapacity),
+        _length(0),
+        _data((T*) malloc(sizeof(T) * _capacity))
 {
 }
 
-TimePiecesContainerIterator::TimePiecesContainerIterator(const TimePiecesContainerIterator& other) {
-    _currentNode = other._currentNode;
-}
-
-TimePiecesContainerIterator::~TimePiecesContainerIterator() {
-}
-
-const TimePiece& TimePiecesContainerIterator::current() const {
-    assert(_currentNode != nullptr);
-    return _currentNode->item;
-}
-
-void TimePiecesContainerIterator::next() {
-    assert(_currentNode != nullptr);
-    _currentNode = _currentNode->nextNode;
-}
-
-bool TimePiecesContainerIterator::isDone() {
-    return _currentNode == nullptr;
-}
-
-
-class TimePiecesContainer {
-public:
-    TimePiecesContainer();
-    TimePiecesContainer(const TimePiecesContainer& other);
-    ~TimePiecesContainer();
-
-    void push(TimePiece item);
-    TimePiecesContainerIterator iterate() const;
-    size_t getLength();
-
-    Time getMinTime() const;
-    Time getMaxTime() const;
-
-private:
-    TimePiecesContainerNode* _head = nullptr;
-};
-
-TimePiecesContainer::TimePiecesContainer() {
-}
-
-TimePiecesContainer::TimePiecesContainer(const TimePiecesContainer& other) {
-    _head = other._head;
-}
-
-TimePiecesContainer::~TimePiecesContainer() {
-    TimePiecesContainerNode** nodes = new TimePiecesContainerNode*[getLength()];
-    TimePiecesContainerNode* node = _head;
-    size_t i = 0;
-    while (node != nullptr) {
-        nodes[i++] = node;
-        node = node->nextNode;
+template<typename T>
+MyVector<T>::MyVector(const MyVector &other) {
+    _capacity = other._capacity;
+    _length = other._length;
+    if (_data != nullptr) {
+        free(_data);
     }
-    delete[] nodes;
+    _data = (T*) malloc(sizeof(T) * _capacity);
+    memcpy(_data, other._data, sizeof(T) * _length);
 }
 
-void TimePiecesContainer::push(TimePiece item) {
-    TimePiecesContainerNode* newNode = new TimePiecesContainerNode(item);
-    if (_head == nullptr) {
-        _head = newNode;
-    } else {
-        TimePiecesContainerNode* node = _head;
-        while (node->nextNode != nullptr) {
-            const TimePiece& nextPiece = node->nextNode->item;
-            if (item.getEnd() < nextPiece.getEnd()) {
-                break;
-            }
-            if (item.getEnd() == nextPiece.getEnd() && item.getDuration() < nextPiece.getDuration()) {
-                break;
-            }
-            node = node->nextNode;
+template<typename T>
+MyVector<T>::~MyVector() {
+    free(_data);
+}
+
+template<typename T>
+void MyVector<T>::append(T item) {
+    if (_length == _capacity) {
+        _grow();
+    }
+    _data[_length++] = item;
+}
+
+template<typename T>
+void MyVector<T>::remove(size_t index) {
+    assert(index < _length);
+    for (size_t i = index + 1; i < _length; i++) {
+        _data[i - 1] = _data[i];
+    }
+    _length--;
+}
+
+template<typename T>
+void MyVector<T>::pop() {
+    assert(_length > 0);
+    _length--;
+}
+
+template<typename T>
+void MyVector<T>::sort() {
+    if (_length > 0) {
+        _qsort(0, _length - 1);
+    }
+}
+
+template<typename T>
+T MyVector<T>::operator[](size_t index) const {
+    assert(index < _length);
+    return _data[index];
+}
+
+template<typename T>
+T& MyVector<T>::operator[](size_t index) {
+    assert(index < _length);
+    return _data[index];
+}
+
+template<typename T>
+size_t MyVector<T>::getLength() const {
+    return _length;
+}
+
+template<typename T>
+void MyVector<T>::_grow() {
+    const size_t kGrowStep = 32;
+    _capacity += kGrowStep;
+    _data = (T*) realloc(_data, sizeof(T) * _capacity);
+}
+
+template<typename T>
+void MyVector<T>::_qsort(size_t left, size_t right) {
+    if (left < right) {
+        size_t middle = _qsort_partition(left, right);
+        _qsort(left, middle);
+        _qsort(middle + 1, right);
+    }
+}
+
+template<typename T>
+size_t MyVector<T>::_qsort_partition(size_t left, size_t right) {
+    T exampleItem = _data[(left + right) / 2];
+    size_t i = left;
+    size_t j = right;
+    while (i < j) {
+        while (_data[i] < exampleItem) {
+            i++;
         }
-        newNode->nextNode = node->nextNode;
-        node->nextNode = newNode;
-    }
-}
-
-TimePiecesContainerIterator TimePiecesContainer::iterate() const {
-    return TimePiecesContainerIterator(_head);
-}
-
-size_t TimePiecesContainer::getLength() {
-    size_t length = 0;
-    TimePiecesContainerNode* node = _head;
-    while (node != nullptr) {
-        length++;
-        node = node->nextNode;
-    }
-    return length;
-}
-
-Time TimePiecesContainer::getMinTime() const {
-    assert(_head != nullptr);
-    TimePiecesContainerNode* node = _head;
-    Time min = node->item.getStart();
-    node = node->nextNode;
-    while (node != nullptr) {
-        if (node->item.getStart() < min) {
-            min = node->item.getStart();
+        while (_data[j] > exampleItem) {
+            j--;
         }
-        node = node->nextNode;
+        if (i < j) {
+            T temp = _data[i];
+            _data[i] = _data[j];
+            _data[j] = temp;
+            i++;
+            j--;
+        }
+    }
+    return i;
+}
+
+
+template<typename T>
+Time findMinTime(const MyVector<T>& container) {
+    static_assert(std::is_base_of<TimePiece, T>::value, "Template type must subclass of TimePiece");
+
+    Time min = container[0].getStart();
+    for (size_t i = 0; i < container.getLength(); i++) {
+        if (container[i].getStart() < min) {
+            min = container[i].getStart();
+        }
     }
     return min;
 }
 
-Time TimePiecesContainer::getMaxTime() const {
-    assert(_head != nullptr);
-    TimePiecesContainerNode* node = _head;
-    Time max = node->item.getEnd();
-    node = node->nextNode;
-    while (node != nullptr) {
-        if (node->item.getEnd() < max) {
-            max = node->item.getEnd();
+template<typename T>
+Time findMaxTime(const MyVector<T>& container) {
+    static_assert(std::is_base_of<TimePiece, T>::value, "Template type must subclass of TimePiece");
+
+    Time max = container[0].getEnd();
+    for (size_t i = 0; i < container.getLength(); i++) {
+        if (max < container[i].getEnd()) {
+            max = container[i].getEnd();
         }
-        node = node->nextNode;
     }
     return max;
 }
 
+size_t countMaxDurations(MyVector<TimePieceComparableByEnd> container) {
+    container.sort();
 
-size_t countMaxDurations(const TimePiecesContainer& container) {
     size_t result = 0;
 
-    Time minTime = container.getMinTime();
-    Time maxTime = container.getMaxTime();
+    Time minTime = findMinTime(container);
+    Time maxTime = findMaxTime(container);
     size_t scheduleSize = (size_t) (maxTime - minTime + 1);
-    bool* schedule = (bool*) calloc(scheduleSize, sizeof(bool));
+    bool* schedule = new bool[scheduleSize];
+    memset(schedule, false, scheduleSize);
 
-    for (TimePiecesContainerIterator iter = container.iterate(); !iter.isDone(); iter.next()) {
-        const TimePiece& item = iter.current();
-        
+    for (size_t i = 0; i < container.getLength(); i++) {
+        const TimePieceComparableByEnd& item = container[i];
+
         bool canSchedule = true;
-        for (Time i = item.getStart(); i < item.getEnd(); i++) {
-            if (schedule[minTime + i]) {
+        for (Time time = item.getStart(); time < item.getEnd(); time++) {
+            if (schedule[minTime + time]) {
                 canSchedule = false;
                 break;
             }
         }
         if (canSchedule) {
             result++;
-            for (Time i = item.getStart(); i < item.getEnd(); i++) {
-                schedule[minTime + i] = true;
+            for (Time time = item.getStart(); time < item.getEnd(); time++) {
+                schedule[minTime + time] = true;
             }
         }
     }
 
-    free(schedule);
+    delete[] schedule;
 
     return result;
 }
 
-
 int main() {
-    TimePiecesContainer container;
+    MyVector<TimePieceComparableByEnd> container;
 
     Time startTime, endTime;
     while (cin >> startTime && cin >> endTime) {
-        container.push(TimePiece(startTime, endTime));
+        container.append(TimePieceComparableByEnd(startTime, endTime));
     }
 
     cout << countMaxDurations(container);
