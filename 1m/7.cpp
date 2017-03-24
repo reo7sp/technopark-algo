@@ -75,7 +75,6 @@ bool TimePiece::operator!=(const TimePiece& other) const {
 class TimePieceComparableByEnd : public TimePiece {
 public:
     TimePieceComparableByEnd(Time start, Time end) : TimePiece(start, end) {}
-    TimePieceComparableByEnd(const TimePieceComparableByEnd& other) : TimePiece(other._start, other._end) {}
 
     bool operator<(const TimePiece& other) const;
     bool operator>(const TimePiece& other) const;
@@ -207,17 +206,20 @@ void MyVector<T>::_qsort(size_t left, size_t right) {
 
 template<typename T>
 size_t MyVector<T>::_qsort_partition(size_t left, size_t right) {
-    T exampleItem = _data[(left + right) / 2];
+    T pivot = _data[(left + right) / 2];
     size_t i = left;
     size_t j = right;
-    while (i < j) {
-        while (_data[i] < exampleItem) {
+    while (i <= j) {
+        while (i < _length && _data[i] < pivot) {
             i++;
         }
-        while (_data[j] > exampleItem) {
+        while (j < _length && _data[j] > pivot) {
             j--;
         }
-        if (i < j) {
+        if (i >= _length || j >= _length) {
+            break;
+        }
+        if (i <= j) {
             T temp = _data[i];
             _data[i] = _data[j];
             _data[j] = temp;
@@ -229,62 +231,29 @@ size_t MyVector<T>::_qsort_partition(size_t left, size_t right) {
 }
 
 
-template<typename T>
-Time findMinTime(const MyVector<T>& container) {
-    static_assert(std::is_base_of<TimePiece, T>::value, "Template type must subclass of TimePiece");
-
-    Time min = container[0].getStart();
-    for (size_t i = 0; i < container.getLength(); i++) {
-        if (container[i].getStart() < min) {
-            min = container[i].getStart();
-        }
-    }
-    return min;
-}
-
-template<typename T>
-Time findMaxTime(const MyVector<T>& container) {
-    static_assert(std::is_base_of<TimePiece, T>::value, "Template type must subclass of TimePiece");
-
-    Time max = container[0].getEnd();
-    for (size_t i = 0; i < container.getLength(); i++) {
-        if (max < container[i].getEnd()) {
-            max = container[i].getEnd();
-        }
-    }
-    return max;
-}
 
 size_t countMaxDurations(MyVector<TimePieceComparableByEnd> container) {
-    container.sort();
-
-    size_t result = 0;
-
-    Time minTime = findMinTime(container);
-    Time maxTime = findMaxTime(container);
-    size_t scheduleSize = (size_t) (maxTime - minTime + 1);
-    bool* schedule = new bool[scheduleSize];
-    memset(schedule, false, scheduleSize);
-
-    for (size_t i = 0; i < container.getLength(); i++) {
-        const TimePieceComparableByEnd& item = container[i];
-
-        bool canSchedule = true;
-        for (Time time = item.getStart(); time < item.getEnd(); time++) {
-            if (schedule[minTime + time]) {
-                canSchedule = false;
-                break;
-            }
-        }
-        if (canSchedule) {
-            result++;
-            for (Time time = item.getStart(); time < item.getEnd(); time++) {
-                schedule[minTime + time] = true;
-            }
-        }
+    if (container.getLength() == 0) {
+        return 0;
     }
 
-    delete[] schedule;
+    container.sort();
+
+    for (size_t i = 1; i < container.getLength(); i++) {
+        const TimePieceComparableByEnd& item = container[i];
+        cout << item.getStart() << ' ' << item.getEnd() << endl;
+    }
+
+    size_t result = 1;
+    Time lastTime = container[0].getEnd();
+
+    for (size_t i = 1; i < container.getLength(); i++) {
+        const TimePieceComparableByEnd& item = container[i];
+        if (lastTime <= item.getStart()) {
+            result++;
+            lastTime = item.getEnd();
+        }
+    }
 
     return result;
 }
