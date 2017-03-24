@@ -108,9 +108,7 @@ public:
 
 private:
     void _grow();
-
     void _qsort(size_t left, size_t right);
-    size_t _qsort_partition(size_t left, size_t right);
 
     size_t _capacity = 0;
     size_t _length = 0;
@@ -190,22 +188,12 @@ size_t MyVector<T>::getLength() const {
 
 template<typename T>
 void MyVector<T>::_grow() {
-    const size_t kGrowStep = 32;
-    _capacity += kGrowStep;
+    _capacity *= 2;
     _data = (T*) realloc(_data, sizeof(T) * _capacity);
 }
 
 template<typename T>
 void MyVector<T>::_qsort(size_t left, size_t right) {
-    if (left < right) {
-        size_t middle = _qsort_partition(left, right);
-        _qsort(left, middle - 1);
-        _qsort(middle + 1, right);
-    }
-}
-
-template<typename T>
-size_t MyVector<T>::_qsort_partition(size_t left, size_t right) {
     T pivot = _data[(left + right) / 2];
     size_t i = left;
     size_t j = right;
@@ -227,9 +215,16 @@ size_t MyVector<T>::_qsort_partition(size_t left, size_t right) {
             j--;
         }
     }
-    return i;
+    if (j > _length) {
+        j = 0;
+    }
+    if (left < j) {
+        _qsort(left, j);
+    }
+    if (i < right) {
+        _qsort(i, right);
+    }
 }
-
 
 
 size_t countMaxDurations(MyVector<TimePieceComparableByEnd> container) {
@@ -238,11 +233,6 @@ size_t countMaxDurations(MyVector<TimePieceComparableByEnd> container) {
     }
 
     container.sort();
-
-    for (size_t i = 1; i < container.getLength(); i++) {
-        const TimePieceComparableByEnd& item = container[i];
-        cout << item.getStart() << ' ' << item.getEnd() << endl;
-    }
 
     size_t result = 1;
     Time lastTime = container[0].getEnd();
