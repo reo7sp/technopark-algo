@@ -93,8 +93,7 @@ size_t IntVector::getLength() const {
 }
 
 void IntVector::_grow() {
-    const size_t kGrowStep = 32;
-    _capacity += kGrowStep;
+    _capacity *= 2;
     _data = (int*) realloc(_data, sizeof(int) * _capacity);
 }
 

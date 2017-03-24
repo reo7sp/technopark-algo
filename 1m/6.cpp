@@ -61,6 +61,9 @@ size_t TriangleTableRow::getSize() const {
 }
 
 
+// 2 dimensional square array without elements above main diagonal.
+// Indexes are starting from 1, not 0.
+// Tables are initialized by zeros.
 class TriangleTable {
 public:
     TriangleTable(size_t size);
@@ -112,11 +115,20 @@ size_t TriangleTable::getSize() const {
 }
 
 size_t TriangleTable::_getDataLocation(size_t n) const {
+    // This formula calculates sum of an arithmetic progression with step = 1.
+    // Graphic representation:
+    // *
+    // **
+    // ***
+    // ****
+    // ...
     return (1 + n) * n / 2;
 }
 
 
 unsigned long countPossiblePyramids(size_t n) {
+    // One pyramid is one split of n into sum components.
+    // E.g. 6 = 3 + 2 + 1
     assert(n >= 1);
     TriangleTable table(n);
     /*
@@ -130,6 +142,11 @@ unsigned long countPossiblePyramids(size_t n) {
      *   |   111                    | 5 = (5), (4, 1), (3, 2)
      *   |   1111                   | 6 = (6), (5, 1), (4, 2), (3, 2, 1)
      *   |    2111                  | 7 = (7), (6, 1), (5, 2), (4, 3), (4, 2, 1)
+     *   |    12111                 | 8 = (8), (7, 1), (6, 2), (5, 3), (5, 2, 1), (4, 3, 1)
+     *   |    122111                | 9 = (9), (8, 1), (7, 2), (6, 3), (6, 2, 1), (5, 4), (5, 3, 1), (4, 3, 2)
+     * --+--------------------------+
+     *     1 3 5 7 9
+     *      2 4 6 8
      */
     table[1][1] = 1;
     if (n >= 2) {
@@ -145,7 +162,7 @@ unsigned long countPossiblePyramids(size_t n) {
     }
     unsigned long result = 0;
     for (size_t i = 1; i <= n; i++) {
-        result += table[n][i];
+        result += table[n][i]; // sum of the row
     }
     return result;
 }

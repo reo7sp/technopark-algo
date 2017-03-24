@@ -101,8 +101,7 @@ size_t MyVector<T>::getLength() const {
 
 template<typename T>
 void MyVector<T>::_grow() {
-    const size_t kGrowStep = 32;
-    _capacity += kGrowStep;
+    _capacity *= 2;
     _data = (T*) realloc(_data, sizeof(T) * _capacity);
 }
 
@@ -118,6 +117,7 @@ size_t findIndex(const MyVector<int>& src, int item) {
     size_t left = 0;
     size_t right = src.getLength() - 1;
 
+    // find range in between 2^(ceil(log2(item))) and 2^(ceil(log2(item)) + 1)
     for (size_t i = 1; i < src.getLength(); i <<= 1) {
         if (src[i] < item) {
             left = i;
@@ -127,6 +127,7 @@ size_t findIndex(const MyVector<int>& src, int item) {
         }
     }
 
+    // find item's index using binary search in the sub range
     while (left < right) {
         size_t mid = (left + right) / 2;
         if (src[mid] < item) {

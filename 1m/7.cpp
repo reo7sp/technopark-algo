@@ -99,7 +99,7 @@ public:
     void append(T item);
     void remove(size_t index);
     void pop();
-    void sort();
+    void sort(); // sort order is ascending
 
     T operator[](size_t index) const;
     T& operator[](size_t index);
@@ -188,7 +188,8 @@ size_t MyVector<T>::getLength() const {
 
 template<typename T>
 void MyVector<T>::_grow() {
-    _capacity *= 2;
+    const size_t kGrowFactor = 2;
+    _capacity *= kGrowFactor;
     _data = (T*) realloc(_data, sizeof(T) * _capacity);
 }
 
@@ -232,16 +233,16 @@ size_t countMaxDurations(MyVector<TimePieceComparableByEnd> container) {
         return 0;
     }
 
-    container.sort();
+    container.sort(); // sort by ends
 
     size_t result = 1;
-    Time lastTime = container[0].getEnd();
+    Time lastEndTime = container[0].getEnd();
 
     for (size_t i = 1; i < container.getLength(); i++) {
         const TimePieceComparableByEnd& item = container[i];
-        if (lastTime <= item.getStart()) {
+        if (lastEndTime <= item.getStart()) { // use next item as soon as it doesn't overlap
             result++;
-            lastTime = item.getEnd();
+            lastEndTime = item.getEnd();
         }
     }
 

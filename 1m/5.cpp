@@ -78,8 +78,8 @@ char CharStack::seek() const {
 }
 
 void CharStack::_grow() {
-    const size_t kGrowStep = 32;
-    _capacity += kGrowStep;
+    const size_t kGrowFactor = 2;
+    _capacity *= kGrowFactor;
     _data = (char*) realloc(_data, sizeof(char) * _capacity);
 }
 
@@ -88,10 +88,11 @@ bool CharStack::isEmpty() {
 }
 
 
-bool isStackAnagram(const string& src, const string& dst) {
+bool isStackAnagram(const char* src, const char* dst) {
     CharStack stack;
     size_t dstIndex = 0;
-    for (size_t srcIndex = 0; srcIndex < src.length(); srcIndex++) {
+    for (size_t srcIndex = 0; src[srcIndex] != '\0'; srcIndex++) {
+        // emulating stack anagram creation
         stack.push(src[srcIndex]);
         while (!stack.isEmpty() && dst[dstIndex] == stack.seek()) {
             stack.pop();
@@ -103,11 +104,16 @@ bool isStackAnagram(const string& src, const string& dst) {
 
 
 int main() {
-    string src, dst;
+    char* src = new char[10000];
     cin >> src;
+
+    char* dst = new char[10000];
     cin >> dst;
 
     cout << (isStackAnagram(src, dst) ? "YES" : "NO");
+
+    delete[] src;
+    delete[] dst;
 
     return 0;
 }

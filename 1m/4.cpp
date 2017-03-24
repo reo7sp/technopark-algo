@@ -44,8 +44,8 @@ private:
 
     int* _data = nullptr;
     size_t _capacity = 0;
-    size_t _headIndex = 0;
-    size_t _tailIndex = 0;
+    size_t _headIndex = 0; // head index is inclusive
+    size_t _tailIndex = 0; // tail index is exclusive ((_tailIndex - 1) is an index of actual last element)
 };
 
 Deque::Deque(size_t initialCapacity) :
@@ -88,7 +88,7 @@ void Deque::pushBack(int item) {
         newIndex = _getNextIndex(_tailIndex);
     }
     _data[_tailIndex] = item;
-    _tailIndex = newIndex;
+    _tailIndex = newIndex; // code differs from pushFront() because tail index is exclusive
 }
 
 int Deque::popFront() {
@@ -110,12 +110,14 @@ int Deque::popBack() {
 }
 
 void Deque::_grow() {
-    const size_t kGrowStep = 32;
-    _capacity += kGrowStep;
+    const size_t kGrowFactor = 2;
+    size_t oldCapacity = _capacity;
+    _capacity *= kGrowFactor;
+    size_t capacityChange = _capacity - oldCapacity;
     _data = (int*) realloc(_data, sizeof(int) * _capacity);
     if (_tailIndex < _headIndex) {
-        memmove(_data + _headIndex + kGrowStep, _data + _headIndex, sizeof(int) * (_capacity - _headIndex));
-        _headIndex += kGrowStep;
+        memmove(_data + _headIndex + capacityChange, _data + _headIndex, sizeof(int) * (oldCapacity - _headIndex));
+        _headIndex += capacityChange;
     }
 }
 
