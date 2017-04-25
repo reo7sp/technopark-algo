@@ -92,7 +92,7 @@ void Heap<T>::_siftDown(size_t i) {
 
 template<typename T>
 size_t Heap<T>::_getParentIndex(size_t i) const {
-    assert(i != 0);
+    assert(i > 0);
     return (i - 1) / 2;
 }
 
