@@ -83,7 +83,18 @@ public:
 
 template<typename T>
 bool BoxIsLessComparer<T>::operator()(const T& left, const T& right) const {
-    return left.getSizeX() < right.getSizeX() && left.getSizeY() < right.getSizeY() && left.getSizeZ() < right.getSizeZ();
+    int lx = left.getSizeX();
+    int ly = left.getSizeY();
+    int lz = left.getSizeZ();
+    int rx = right.getSizeX();
+    int ry = right.getSizeY();
+    int rz = right.getSizeZ();
+    return (lx < rx && ly < ry && lz < rz) ||
+           (lx < ry && ly < rz && lz < rx) ||
+           (lx < rz && ly < rx && lz < ry) ||
+           (lx < rx && ly < rz && lz < ry) ||
+           (lx < rz && ly < ry && lz < rx) ||
+           (lx < ry && ly < rx && lz < rz);
 };
 
 
