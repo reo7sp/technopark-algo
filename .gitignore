@@ -142,3 +142,4 @@ fabric.properties
 
 .idea
 cmake-build-debug
+*/tests/**/*.txt
