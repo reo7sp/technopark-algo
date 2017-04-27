@@ -165,21 +165,27 @@ TimeType PersonTime::getType() const {
 
 size_t countAds(vector<PersonTime>& timetable, size_t peopleCount) {
     heapSort(timetable, [](const PersonTime& left, const PersonTime& right) {
-        return left.getTime() < right.getTime();
+        if (left.getTime() != right.getTime()) {
+            return left.getTime() < right.getTime();
+        } else {
+            return left.getType() > right.getType();
+        }
     });
 
     size_t lastAdId = 0;
+    int lastAdIdTime = 0;
     vector<size_t> userStartAdIds(peopleCount);
     for (size_t i = 0; i < timetable.size(); i++) {
         const PersonTime& item = timetable[i];
 
         switch (item.getType()) {
             case TimeType::ENTER:
-                userStartAdIds[item.getPersonId()] = lastAdId;
+                userStartAdIds[item.getPersonId()] = lastAdIdTime == item.getTime() ? lastAdId - 1 : lastAdId;
                 break;
             case TimeType::EXIT:
                 while (lastAdId - userStartAdIds[item.getPersonId()] < 2) {
                     lastAdId++;
+                    lastAdIdTime = item.getTime();
                 }
                 break;
         }
