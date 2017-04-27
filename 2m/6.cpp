@@ -18,6 +18,7 @@
  */
 
 #include <cassert>
+#include <cstring>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -26,92 +27,63 @@ using namespace std;
 
 
 namespace _msdSortInternal {
-    vector<string> countingSort(const vector<string>& array, size_t startIndex, size_t endIndex, size_t alphabetSize, size_t sortIndex) {
-        if (endIndex <= startIndex) {
-            return vector<string>();
+    void countingSort(string* array, size_t n, size_t alphabetSize, size_t sortIndex, size_t* groupStartsOut) {
+        size_t* counts = (size_t*) malloc(sizeof(size_t) * (alphabetSize + 1));
+        memset(counts, 0, sizeof(size_t) * (alphabetSize + 1));
+        for (size_t i = 0; i < n; i++) {
+            char ch = sortIndex < array[i].size() ? array[i][sortIndex] : '\0';
+            counts[ch]++;
         }
-        const size_t n = endIndex - startIndex;
-        vector<size_t> counts(alphabetSize + 1);
-        for (size_t i = 0; i < n; ++i) {
-            char c;
-            if (sortIndex < array[startIndex + i].size()) {
-                c = array[startIndex + i][sortIndex];
-            } else {
-                c = '\0';
-            }
-            counts[c]++;
-        }
+
         size_t countsSum = 0;
         for (size_t i = 0; i < alphabetSize + 1; i++) {
             size_t countsForItem = counts[i];
             counts[i] = countsSum;
             countsSum += countsForItem;
         }
-        vector<string> result(n);
-        for (size_t i = 0; i < n; ++i) {
-            result[counts[array[startIndex + i][sortIndex]]++] = array[startIndex + i];
+        memcpy(groupStartsOut, counts, sizeof(size_t) * (alphabetSize + 1));
+
+        string* result = (string*) malloc(sizeof(string) * n);
+        for (size_t i = 0; i < n; i++) {
+            char ch = sortIndex < array[i].size() ? array[i][sortIndex] : '\0';
+            result[counts[ch]++] = array[i];
         }
-        return result;
+        memcpy(array, result, sizeof(string) * n);
+
+        free(counts);
+        free(result);
     }
 
-    vector<string> msdSort(const vector<string>& array, size_t startIndex, size_t endIndex, size_t alphabetSize, size_t sortIndex) {
-        if (endIndex <= startIndex) {
-            return vector<string>();
+    void msdSort(string* array, size_t n, size_t alphabetSize, size_t sortIndex) {
+        if (array[0].size() <= sortIndex || n < 2) {
+            return;
         }
-
-        vector<string> result;
-        result.reserve(endIndex - startIndex);
-
-        char currentChar = array[startIndex][sortIndex - 1];
-        size_t currentCharStartIndex = startIndex;
-        for (size_t i = startIndex; i <= endIndex; i++) {
-            if (i == endIndex || array[i][sortIndex - 1] != currentChar) {
-                vector<string> notYetSortedArray = countingSort(array, currentCharStartIndex, i, alphabetSize, sortIndex);
-
-                size_t longerItemsStartIndex = notYetSortedArray.size();
-                for (size_t i = 0; i < notYetSortedArray.size(); i++) {
-                    if (sortIndex < notYetSortedArray[i].size()) {
-                        longerItemsStartIndex = i;
-                        break;
-                    }
-                }
-
-                vector<string> sortedLongerItems = msdSort(notYetSortedArray, longerItemsStartIndex, notYetSortedArray.size(), alphabetSize, sortIndex + 1);
-
-                for (size_t i = 0; i < longerItemsStartIndex; i++) {
-                    result.push_back(notYetSortedArray[i]);
-                }
-                for (size_t i = 0; i < sortedLongerItems.size(); i++) {
-                    result.push_back(sortedLongerItems[i]);
-                }
-
-                if (i < endIndex) {
-                    currentChar = array[i][sortIndex - 1];
-                    currentCharStartIndex = i;
-                }
-            }
+        size_t* groupStarts = new size_t[alphabetSize + 1];
+        countingSort(array, n, alphabetSize, sortIndex, groupStarts);
+        for (size_t i = 0; i < alphabetSize; i++) {
+            assert(groupStarts[i + 1] >= groupStarts[i]);
+            msdSort(array + groupStarts[i], groupStarts[i + 1] - groupStarts[i], alphabetSize, sortIndex + 1);
         }
-
-        return result;
+        delete[] groupStarts;
     }
 }
 
-vector<string> msdSort(const vector<string>& array, size_t alphabetSize) {
-    vector<string> sortedArray = _msdSortInternal::countingSort(array, 0, array.size(), alphabetSize, 0);
-    return _msdSortInternal::msdSort(sortedArray, 0, sortedArray.size(), alphabetSize, 1);
+void msdSort(vector<string>& array, size_t alphabetSize) {
+    _msdSortInternal::msdSort(array.data(), array.size(), alphabetSize, 0);
 }
 
 
 int main() {
     vector<string> input;
+
     string line;
     while (getline(cin, line)) {
         input.push_back(line);
     }
 
-    vector<string> output = msdSort(input, 256);
+    msdSort(input, 256);
 
-    for (auto& it : output) {
+    for (auto& it : input) {
         cout << it << endl;
     }
 
