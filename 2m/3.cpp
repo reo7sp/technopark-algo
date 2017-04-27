@@ -168,31 +168,24 @@ size_t countAds(vector<PersonTime>& timetable, size_t peopleCount) {
         return left.getTime() < right.getTime();
     });
 
-    size_t adCount = 0;
-    vector<size_t> adIds(peopleCount);
-    size_t indexOfPrevTime = 0;
-    for (size_t i = 1; i < timetable.size(); i++) {
-        const PersonTime& prevItem = timetable[i - 1];
+    size_t lastAdId = 0;
+    vector<size_t> userStartAdIds(peopleCount);
+    for (size_t i = 0; i < timetable.size(); i++) {
         const PersonTime& item = timetable[i];
-        cout << item.getPersonId() << " " << (int) item.getType() << " " << item.getTime() << endl;
-
-        if (prevItem.getTime() != item.getTime()) {
-
-        }
 
         switch (item.getType()) {
             case TimeType::ENTER:
+                userStartAdIds[item.getPersonId()] = lastAdId;
                 break;
             case TimeType::EXIT:
-                if (adIds[item.getPersonId()] < 2) {
-                    adIds[item.getPersonId()]++;
-                    adCount += 1;
+                while (lastAdId - userStartAdIds[item.getPersonId()] < 2) {
+                    lastAdId++;
                 }
                 break;
         }
     }
 
-    return adCount;
+    return lastAdId;
 }
 
 
