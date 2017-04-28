@@ -99,7 +99,7 @@ void Heap<T, COMPARE>::_siftDown(size_t i, size_t size) {
     }
 
     if (largestElemIndex != i) {
-        std::swap(_data[i], _data[largestElemIndex]);
+        swap(_data[i], _data[largestElemIndex]);
         _siftDown(largestElemIndex, size);
     }
 }
@@ -128,70 +128,69 @@ void heapSort(vector<T>& data, COMPARE compare) {
 };
 
 
-enum class TimeType {
-    ENTER, EXIT
-};
-
-
-class PersonTime {
+class PersonVisit {
 public:
-    PersonTime(size_t personId, int time, TimeType timeType);
+    PersonVisit(int startTime, int endTime);
 
-    size_t getPersonId() const;
-    int getTime() const;
-    TimeType getType() const;
+    int getStartTime() const;
+    int getEndTime() const;
+
+    bool includes(int time) const;
 
 private:
-    size_t _personId;
-    int _time;
-    TimeType _timeType;
+    int _startTime;
+    int _endTime;
 };
 
-PersonTime::PersonTime(size_t personId, int time, TimeType timeType) : _personId(personId), _time(time), _timeType(timeType) {
+PersonVisit::PersonVisit(int startTime, int endTime) : _startTime(startTime), _endTime(endTime) {
 }
 
-size_t PersonTime::getPersonId() const {
-    return _personId;
+int PersonVisit::getStartTime() const {
+    return _startTime;
 }
 
-int PersonTime::getTime() const {
-    return _time;
+int PersonVisit::getEndTime() const {
+    return _endTime;
 }
 
-TimeType PersonTime::getType() const {
-    return _timeType;
+bool PersonVisit::includes(int time) const {
+    return _startTime <= time && time <= _endTime;
 }
 
 
-size_t countAds(vector<PersonTime>& timetable, size_t peopleCount) {
-    heapSort(timetable, [](const PersonTime& left, const PersonTime& right) {
-        if (left.getTime() != right.getTime()) {
-            return left.getTime() < right.getTime();
-        } else {
-            return left.getType() > right.getType();
+size_t countAds(vector<PersonVisit>& visits, size_t peopleCount) {
+    heapSort(visits, [](const PersonVisit& left, const PersonVisit& right) {
+        if (left.getEndTime() < right.getEndTime()) {
+            return true;
         }
+        if (right.getEndTime() < left.getEndTime()) {
+            return false;
+        }
+        return left.getStartTime() < right.getStartTime();
     });
 
-    size_t lastAdId = 0;
-    int lastAdIdTime = 0;
-    vector<size_t> userStartAdIds(peopleCount);
-    for (size_t i = 0; i < timetable.size(); i++) {
-        const PersonTime& item = timetable[i];
+    size_t adCount = 2;
 
-        switch (item.getType()) {
-            case TimeType::ENTER:
-                userStartAdIds[item.getPersonId()] = lastAdIdTime == item.getTime() ? lastAdId - 1 : lastAdId;
-                break;
-            case TimeType::EXIT:
-                while (lastAdId - userStartAdIds[item.getPersonId()] < 2) {
-                    lastAdId++;
-                    lastAdIdTime = item.getTime();
-                }
-                break;
+    int adTime1 = visits[0].getEndTime();
+    int adTime2 = adTime1 - 1;
+    for (const PersonVisit& visit : visits) {
+        if (!visit.includes(adTime1)) {
+            adTime1 = visit.getEndTime();
+            if (adTime1 == adTime2) {
+                adTime1--;
+            }
+            adCount++;
+        }
+        if (!visit.includes(adTime2)) {
+            adTime2 = visit.getEndTime();
+            if (adTime1 == adTime2) {
+                adTime2--;
+            }
+            adCount++;
         }
     }
 
-    return lastAdId;
+    return adCount;
 }
 
 
@@ -199,14 +198,13 @@ int main() {
     size_t n;
     cin >> n;
 
-    vector<PersonTime> input;
+    vector<PersonVisit> input;
     input.reserve(n);
     for (size_t i = 0; i < n; i++) {
         int start, end;
         cin >> start;
         cin >> end;
-        input.push_back(PersonTime(i, start, TimeType::ENTER));
-        input.push_back(PersonTime(i, end, TimeType::EXIT));
+        input.push_back(PersonVisit(start, end));
     }
 
     cout << countAds(input, n);
