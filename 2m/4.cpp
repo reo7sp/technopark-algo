@@ -76,17 +76,28 @@ namespace findOrderStatisticUtils {
 
         T pivot = array[pivotIndex];
         swap(array[pivotIndex], array[endIndex]); // pivot must not interfere in comparisons
+        endIndex--;
 
         size_t i = startIndex;
-        size_t j = startIndex;
-        while (j < endIndex) {
-            if (array[j] <= pivot) {
-                swap(array[i], array[j]);
+        size_t j = endIndex;
+        while (i <= j) {
+            while (i <= endIndex && array[i] < pivot) {
                 i++;
             }
-            j++;
+            while (j >= startIndex && array[j] > pivot) {
+                j--;
+            }
+            if (i >= array.size() || j >= array.size()) { // overflow check
+                break;
+            }
+            if (i <= j) {
+                swap(array[i], array[j]);
+                i++;
+                j--;
+            }
         }
 
+        endIndex++;
         swap(array[i], array[endIndex]); // revert pivot
 
         return i;

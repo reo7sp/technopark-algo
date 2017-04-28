@@ -28,10 +28,10 @@ using namespace std;
 
 namespace _msdSortInternal {
     void countingSort(string* array, size_t n, size_t alphabetSize, size_t sortIndex, size_t* groupStartsOut) {
-        size_t* counts = (size_t*) malloc(sizeof(size_t) * (alphabetSize + 1));
-        memset(counts, 0, sizeof(size_t) * (alphabetSize + 1));
+        size_t* counts = (size_t*) malloc(sizeof(size_t) * (alphabetSize + 2));
+        memset(counts, 0, sizeof(size_t) * (alphabetSize + 2));
         for (size_t i = 0; i < n; i++) {
-            char ch = sortIndex < array[i].size() ? array[i][sortIndex] : '\0';
+            auto ch = sortIndex < array[i].size() ? array[i][sortIndex] : '\0';
             counts[ch]++;
         }
 
@@ -43,9 +43,9 @@ namespace _msdSortInternal {
         }
         memcpy(groupStartsOut, counts, sizeof(size_t) * (alphabetSize + 1));
 
-        string* result = (string*) malloc(sizeof(string) * n);
+        string* result = (string*) malloc(sizeof(string) * (n + 2));
         for (size_t i = 0; i < n; i++) {
-            char ch = sortIndex < array[i].size() ? array[i][sortIndex] : '\0';
+            auto ch = sortIndex < array[i].size() ? array[i][sortIndex] : '\0';
             result[counts[ch]++] = array[i];
         }
         memcpy(array, result, sizeof(string) * n);
@@ -55,13 +55,12 @@ namespace _msdSortInternal {
     }
 
     void msdSort(string* array, size_t n, size_t alphabetSize, size_t sortIndex) {
-        if (array[0].size() <= sortIndex || n < 2) {
+        if (n < 2 || array[0].size() <= sortIndex) {
             return;
         }
-        size_t* groupStarts = new size_t[alphabetSize + 1];
+        size_t* groupStarts = new size_t[alphabetSize + 2];
         countingSort(array, n, alphabetSize, sortIndex, groupStarts);
         for (size_t i = 0; i < alphabetSize; i++) {
-            assert(groupStarts[i + 1] >= groupStarts[i]);
             msdSort(array + groupStarts[i], groupStarts[i + 1] - groupStarts[i], alphabetSize, sortIndex + 1);
         }
         delete[] groupStarts;
