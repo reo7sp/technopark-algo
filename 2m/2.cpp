@@ -85,7 +85,7 @@ void Heap<T>::_siftDown(size_t i) {
     }
 
     if (largestElemIndex != i) {
-        std::swap(_data[i], _data[largestElemIndex]);
+        swap(_data[i], _data[largestElemIndex]);
         _siftDown(largestElemIndex);
     }
 }
