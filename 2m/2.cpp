@@ -46,9 +46,9 @@ private:
     void _buildHeap();
     void _siftDown(size_t i);
 
-    size_t _getParentIndex(size_t i) const;
-    size_t _getLeftChildIndex(size_t i) const;
-    size_t _getRightChildIndex(size_t i) const;
+    inline size_t _getParentIndex(size_t i) const;
+    inline size_t _getLeftChildIndex(size_t i) const;
+    inline size_t _getRightChildIndex(size_t i) const;
 };
 
 template<typename T>
@@ -73,36 +73,34 @@ void Heap<T>::_buildHeap() {
 
 template<typename T>
 void Heap<T>::_siftDown(size_t i) {
-    size_t leftElemIndex = _getLeftChildIndex(i);
-    size_t rightElemIndex = _getRightChildIndex(i);
-
-    size_t largestElemIndex = i;
-    if (leftElemIndex < _data.size() && _data[leftElemIndex] > _data[i]) {
-        largestElemIndex = leftElemIndex;
-    }
-    if (rightElemIndex < _data.size() && _data[rightElemIndex] > _data[largestElemIndex]) {
-        largestElemIndex = rightElemIndex;
-    }
-
-    if (largestElemIndex != i) {
-        swap(_data[i], _data[largestElemIndex]);
-        _siftDown(largestElemIndex);
+    size_t rootIndex = i;
+    while (_getLeftChildIndex(rootIndex) <= _data.size()) {
+        int childIndex = _getLeftChildIndex(rootIndex);
+        if (childIndex + 1 <= _data.size() && _data[childIndex] < _data[childIndex + 1]) {
+            ++childIndex;
+        }
+        if (_data[rootIndex] < _data[childIndex]) {
+            swap(_data[rootIndex], _data[childIndex]);
+            rootIndex = childIndex;
+        } else {
+            return;
+        }
     }
 }
 
 template<typename T>
-size_t Heap<T>::_getParentIndex(size_t i) const {
+inline size_t Heap<T>::_getParentIndex(size_t i) const {
     assert(i > 0);
     return (i - 1) / 2;
 }
 
 template<typename T>
-size_t Heap<T>::_getRightChildIndex(size_t i) const {
+inline size_t Heap<T>::_getRightChildIndex(size_t i) const {
     return 2 * i + 2;
 }
 
 template<typename T>
-size_t Heap<T>::_getLeftChildIndex(size_t i) const {
+inline size_t Heap<T>::_getLeftChildIndex(size_t i) const {
     return 2 * i + 1;
 }
 
