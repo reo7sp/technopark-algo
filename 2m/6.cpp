@@ -18,7 +18,6 @@
  */
 
 #include <cassert>
-#include <cstring>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -27,54 +26,58 @@ using namespace std;
 
 
 namespace _msdSortInternal {
-    void countingSort(string* array, size_t n, size_t alphabetSize, size_t sortIndex, size_t* groupStartsOut) {
-        size_t* counts = (size_t*) malloc(sizeof(size_t) * (alphabetSize + 2));
-        memset(counts, 0, sizeof(size_t) * (alphabetSize + 2));
-        for (size_t i = 0; i < n; i++) {
-            auto ch = sortIndex < array[i].size() ? array[i][sortIndex] : '\0';
-            counts[ch]++;
+    vector<size_t>
+    countingSort(vector<string>& array, size_t startIndex, size_t endIndex, size_t alphabetSize, size_t sortIndex) {
+        if (endIndex <= startIndex) {
+            return vector<size_t> {};
         }
-
+        const size_t n = endIndex - startIndex;
+        vector<size_t> counts(alphabetSize + 1);
+        for (size_t i = 0; i < n; ++i) {
+            char c;
+            if (sortIndex < array[startIndex + i].size()) {
+                c = array[startIndex + i][sortIndex];
+            } else {
+                c = '\0';
+            }
+            counts[c]++;
+        }
         size_t countsSum = 0;
         for (size_t i = 0; i < alphabetSize + 1; i++) {
             size_t countsForItem = counts[i];
             counts[i] = countsSum;
             countsSum += countsForItem;
         }
-        memcpy(groupStartsOut, counts, sizeof(size_t) * (alphabetSize + 1));
-
-        string* result = (string*) malloc(sizeof(string) * (n + 2));
-        for (size_t i = 0; i < n; i++) {
-            auto ch = sortIndex < array[i].size() ? array[i][sortIndex] : '\0';
-            result[counts[ch]++] = array[i];
+        vector<string> result(n);
+        for (size_t i = 0; i < n; ++i) {
+            result[counts[array[startIndex + i][sortIndex]]++] = array[startIndex + i];
         }
-        memcpy(array, result, sizeof(string) * n);
-
-        free(counts);
-        free(result);
+        for (size_t i = 0; i < n; i++) {
+            array[startIndex + i] = result[i];
+        }
+        return counts;
     }
 
-    void msdSort(string* array, size_t n, size_t alphabetSize, size_t sortIndex) {
-        if (n < 2 || array[0].size() <= sortIndex) {
+    void msdSort(vector<string>& array, size_t startIndex, size_t endIndex, size_t alphabetSize, size_t sortIndex) {
+        if (endIndex <= startIndex || sortIndex < array[startIndex].size()) {
             return;
         }
-        size_t* groupStarts = new size_t[alphabetSize + 2];
-        countingSort(array, n, alphabetSize, sortIndex, groupStarts);
-        for (size_t i = 0; i < alphabetSize; i++) {
-            msdSort(array + groupStarts[i], groupStarts[i + 1] - groupStarts[i], alphabetSize, sortIndex + 1);
+        auto c = _msdSortInternal::countingSort(array, startIndex, endIndex, alphabetSize, 0);
+        if (c.empty()) return;
+        for (int i = 0; i < alphabetSize + 1; ++i) {
+            _msdSortInternal::msdSort(array, startIndex + c[i], startIndex + c[i + 1] - c[i], alphabetSize, sortIndex + 1);
         }
-        delete[] groupStarts;
     }
 }
 
 void msdSort(vector<string>& array, size_t alphabetSize) {
-    _msdSortInternal::msdSort(array.data(), array.size(), alphabetSize, 0);
+    _msdSortInternal::countingSort(array, 0, array.size(), alphabetSize, 0);
+    _msdSortInternal::msdSort(array, 0, array.size(), alphabetSize, 1);
 }
 
 
 int main() {
     vector<string> input;
-
     string line;
     while (getline(cin, line)) {
         input.push_back(line);
