@@ -54,16 +54,14 @@ using namespace std;
 
 class HashSet {
 public:
-    explicit HashSet(float maxLoadFactor = 3.0f / 4);
+    explicit HashSet(float maxLoadFactor = 3.0f / 4, size_t capacity = 8);
 
     bool add(const string& item);
     bool remove(const string& item);
     bool has(const string& item) const;
 
 private:
-    static const size_t _initialCapacity = 8;
-
-    struct Item {
+    struct Entry {
         string value;
         bool hasValue = false;
     };
@@ -73,17 +71,18 @@ private:
     size_t _hash(const string& item) const;
     size_t _hash(const string& item, size_t m) const;
     size_t _nextHash(size_t previousHash, size_t index) const;
+    size_t _nextHash(size_t previousHash, size_t index, size_t m) const;
 
     void _rehash();
 
-    vector<Item> _data;
+    vector<Entry> _data;
     float _maxLoadFactor = 0;
     size_t _itemCount = 0;
 };
 
-HashSet::HashSet(float maxLoadFactor) : _maxLoadFactor(maxLoadFactor) {
+HashSet::HashSet(float maxLoadFactor, size_t capacity) : _maxLoadFactor(maxLoadFactor) {
     assert(0 < _maxLoadFactor && _maxLoadFactor <= 1);
-    _data.resize(_initialCapacity);
+    _data.resize(capacity);
 }
 
 bool HashSet::add(const string& item) {
@@ -165,18 +164,21 @@ size_t HashSet::_hash(const string& item, size_t m) const {
 }
 
 size_t HashSet::_nextHash(size_t previousHash, size_t index) const {
-    return (previousHash + index) % _data.size();
+    return _nextHash(previousHash, index, _data.size());
+}
+
+size_t HashSet::_nextHash(size_t previousHash, size_t index, size_t m) const {
+    return (previousHash + index) % m;
 }
 
 void HashSet::_rehash() {
-    vector<Item> newData;
-    newData.resize(_data.size() * 2);
-    for (const Item& item : _data) {
-        if (item.hasValue) {
-            newData[_hash(item.value, newData.size())] = item;
+    HashSet newSet(_maxLoadFactor, _data.size() * 2);
+    for (const Entry& entry : _data) {
+        if (entry.hasValue) {
+            newSet.add(entry.value);
         }
     }
-    _data = newData;
+    _data = newSet._data;
 }
 
 
