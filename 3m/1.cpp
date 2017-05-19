@@ -63,7 +63,8 @@ public:
 private:
     struct Entry {
         string value;
-        bool hasValue = false;
+        bool empty = true;
+        bool deleted = false;
     };
 
     float _getLoadFactor() const;
@@ -90,56 +91,58 @@ bool HashSet::add(const string& item) {
         _rehash();
     }
 
-    bool isAdded = false;
-    size_t addPosition = 0;
-
     size_t index = _hash(item);
-    for (size_t i = 0; i < _data.size(); i++) {
-        if (_data[index].hasValue) {
+    size_t hashNo = 0;
+    while (true) {
+        if (_data[index].empty) {
+            _data[index].value = item;
+            _data[index].empty = false;
+            _itemCount++;
+            return true;
+        } else if (_data[index].deleted) {
+            // skip
+        } else {
             if (_data[index].value == item) {
                 return false;
             }
-        } else {
-            if (!isAdded) {
-                isAdded = true;
-                addPosition = index;
-            }
         }
-        index = _nextHash(index, i + 1);
-    }
-
-    if (isAdded) {
-        _data[addPosition].value = item;
-        _data[addPosition].hasValue = true;
-        _itemCount++;
-        return true;
-    } else {
-        return false;
+        index = _nextHash(index, ++hashNo);
     }
 }
 
 bool HashSet::remove(const string& item) {
     size_t index = _hash(item);
-    for (size_t i = 0; i < _data.size(); i++) {
-        if (_data[index].hasValue && _data[index].value == item) {
-            _data[index].hasValue = false;
-            _itemCount--;
-            return true;
+    size_t hashNo = 0;
+    while (true) {
+        if (_data[index].empty) {
+            return false;
+        } else if (_data[index].deleted) {
+            // skip
+        } else {
+            if (_data[index].value == item) {
+                _data[index].deleted = true;
+                return true;
+            }
         }
-        index = _nextHash(index, i + 1);
+        index = _nextHash(index, ++hashNo);
     }
-    return false;
 }
 
 bool HashSet::has(const string& item) const {
     size_t index = _hash(item);
-    for (size_t i = 0; i < _data.size(); i++) {
-        if (_data[index].hasValue && _data[index].value == item) {
-            return true;
+    size_t hashNo = 0;
+    while (true) {
+        if (_data[index].empty) {
+            return false;
+        } else if (_data[index].deleted) {
+            // skip
+        } else {
+            if (_data[index].value == item) {
+                return true;
+            }
         }
-        index = _nextHash(index, i + 1);
+        index = _nextHash(index, ++hashNo);
     }
-    return false;
 }
 
 float HashSet::_getLoadFactor() const {
@@ -147,7 +150,7 @@ float HashSet::_getLoadFactor() const {
 }
 
 bool HashSet::_needRehash() const {
-    return _getLoadFactor() >= _maxLoadFactor;
+    return _maxLoadFactor * _data.size() <= _itemCount;
 }
 
 size_t HashSet::_hash(const string& item) const {
@@ -155,12 +158,13 @@ size_t HashSet::_hash(const string& item) const {
 }
 
 size_t HashSet::_hash(const string& item, size_t m) const {
-    static const size_t a = 41;
+    static const size_t a = 3;
     size_t hash = 0;
     for (char ch : item) {
-        hash = (hash * a + ch) % m;
+        hash += ch;
+        hash *= a;
     }
-    return hash;
+    return hash % m;
 }
 
 size_t HashSet::_nextHash(size_t previousHash, size_t index) const {
@@ -168,17 +172,18 @@ size_t HashSet::_nextHash(size_t previousHash, size_t index) const {
 }
 
 size_t HashSet::_nextHash(size_t previousHash, size_t index, size_t m) const {
-    return (previousHash + index) % m;
+    return (previousHash + index + 1) % m;
 }
 
 void HashSet::_rehash() {
     HashSet newSet(_maxLoadFactor, _data.size() * 2);
     for (const Entry& entry : _data) {
-        if (entry.hasValue) {
+        if (!entry.empty && !entry.deleted) {
             newSet.add(entry.value);
         }
     }
-    _data = newSet._data;
+    _itemCount = newSet._itemCount;
+    _data = move(newSet._data);
 }
 
 
@@ -197,6 +202,8 @@ int main() {
                 break;
             case '?':
                 success = set.has(item);
+                break;
+            default:
                 break;
         }
         cout << (success ? "OK" : "FAIL") << endl;
